@@ -12,12 +12,12 @@ function ProductList({ products }: { products: Product[] }) {
         {products.map((p, idx) => (
           <article
             key={idx}
-            className="rounded-md shadow overflow-hidden bg-primary-500 grid grid-rows-1 grid-cols-3 max-h-48"
+            className="rounded-md shadow overflow-hidden bg-primary-500 grid grid-rows-1 grid-cols-3 lg:grid-cols-7 max-h-48"
           >
             <figure className="aspect-w-16 aspect-h-10">
               <img src={p.image} className="object-fill w-full h-full" />
             </figure>
-            <div className="p-6">
+            <div className="p-6 lg:col-span-5">
               <h3 className=" hover:text-brand-300 duration-500 ease-in-out">
                 {p.title}
               </h3>
