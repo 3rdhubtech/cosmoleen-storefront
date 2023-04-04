@@ -1,8 +1,9 @@
-import Navbar from "./components/Navbar";
-import { faker } from "@faker-js/faker/locale/ar";
-import { ProductList, ProductGrid } from "./components/Products";
+import { useQuery } from "react-query";
 import { useSnapshot } from "valtio";
+import Navbar from "./components/Navbar";
+import { Product, Products } from "./components/Products";
 import { mainStore } from "./stores";
+
 function ArrowDownList() {
   return (
     <svg
@@ -32,29 +33,21 @@ function Arranges() {
   );
 }
 
-function createProduct() {
-  return Array(100)
-    .fill(0)
-    .map(() => ({
-      name: faker.commerce.productName(),
-      price: faker.commerce.price(100),
-      description: faker.commerce.productDescription(),
-      photo: faker.image.avatar(),
-    }));
+async function getProducts(): Promise<Product[]> {
+  const res = await fetch("https://fakestoreapi.com/products");
+  return await res.json();
 }
-
 function App() {
-  const products = createProduct();
   const snap = useSnapshot(mainStore);
+  const query = useQuery("products", getProducts);
+  console.log(query.data);
   return (
     <>
       <Navbar />
       <Arranges />
-      {snap.view === "grid" ? (
-        <ProductGrid products={products} />
-      ) : (
-        <ProductList products={products} />
-      )}
+      {query.isSuccess ? (
+        <Products view={snap.view} products={query.data} />
+      ) : null}
     </>
   );
 }

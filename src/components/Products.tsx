@@ -1,27 +1,27 @@
-type Product = {
-  name: string;
+export type Product = {
+  title: string;
   price: string;
   description: string;
-  photo: string;
+  image: string;
 };
 
-export function ProductList({ products }: { products: Product[] }) {
+function ProductList({ products }: { products: Product[] }) {
   return (
     <div className="container mx-auto">
       <section className="grid grid-cols-1 gap-4">
         {products.map((p, idx) => (
           <article
             key={idx}
-            className="rounded-md shadow overflow-hidden bg-primary-500 grid grid-rows-1 grid-cols-3"
+            className="rounded-md shadow overflow-hidden bg-primary-500 grid grid-rows-1 grid-cols-3 max-h-48"
           >
-            <figure className="aspect-square">
-              <img src={p.photo} className=" object-cover w-full h-full" />
+            <figure className="aspect-w-16 aspect-h-10">
+              <img src={p.image} className="object-fill w-full h-full" />
             </figure>
-            <div className="p-6 grow">
-              <h3 className="title h5 text-lg font-medium hover:text-indigo-600 duration-500 ease-in-out">
-                {p.name}
+            <div className="p-6">
+              <h3 className=" hover:text-brand-300 duration-500 ease-in-out">
+                {p.title}
               </h3>
-              <p className="text-slate-400 mt-3 line-clamp-3 hover:line-clamp-none">
+              <p className="text-slate-400 line-clamp-1 md:line-clamp-2 hover:line-clamp-none">
                 {p.description}
               </p>
             </div>
@@ -38,21 +38,21 @@ export function ProductList({ products }: { products: Product[] }) {
   );
 }
 
-export function ProductGrid({ products }: { products: Product[] }) {
+function ProductGrid({ products }: { products: Product[] }) {
   return (
     <div className="container mx-auto">
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {products.map((p, idx) => (
           <article
             key={idx}
-            className="rounded-md shadow overflow-hidden bg-primary-500 flex flex-col"
+            className="rounded-md shadow overflow-hidden bg-primary-500 flex flex-col justify-between"
           >
-            <figure className="aspect-video">
-              <img src={p.photo} className=" object-cover w-full h-full" />
+            <figure className="aspect-w-16 aspect-h-10">
+              <img src={p.image} className="object-fill w-full h-full" />
             </figure>
             <div className="p-6">
               <h3 className="title h5 text-lg font-medium hover:text-indigo-600 duration-500 ease-in-out">
-                {p.name}
+                {p.title}
               </h3>
               <p className="text-slate-400 mt-3 line-clamp-3 hover:line-clamp-none">
                 {p.description}
@@ -68,5 +68,18 @@ export function ProductGrid({ products }: { products: Product[] }) {
         ))}
       </section>
     </div>
+  );
+}
+export function Products({
+  view = "grid",
+  products,
+}: {
+  view: "grid" | "list";
+  products: Product[];
+}) {
+  return view === "grid" ? (
+    <ProductGrid products={products} />
+  ) : (
+    <ProductList products={products} />
   );
 }
