@@ -1,6 +1,10 @@
+import * as Dialog from "@radix-ui/react-dialog";
+import { useCallback, useState } from "react";
 import { useSnapshot } from "valtio";
 import { changeView, mainStore } from "../stores";
 import Dropdown from "./Dropdown";
+import { Input } from "./Input";
+import SearchIcon from "./SearchIcon";
 function ListIcon() {
   return (
     <svg
@@ -47,42 +51,79 @@ function ArrowDownList() {
 
 export function Arranges() {
   const snap = useSnapshot(mainStore);
+  const [open, setOpen] = useState(false);
+  const toggle = useCallback(() => {
+    setOpen((open) => (open = !open));
+  }, [open]);
+
   return (
-    <section className="text-sm flex my-4 items-center gap-4  bg-primary-500 max-w-sm md:max-w-lg mx-4 md:mx-auto rounded-lg justify-center sm:justify-between md:px-2">
-      <div className="flex gap-2 items-center">
-        <div className="bg-[#111B21] my-1 px-3 py-1 flex items-center gap-1  rounded-md">
-          <span className="hidden md:block">التصنيف: </span>
-          <span>نظارات</span>
+    <>
+      <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="inset-0 fixed grid place-items-top backdrop-blur-sm">
+            <Dialog.Content className="min-w-md p-8">
+              <header className="w-full bg-primary-500 gap-2 flex items-center justify-between p-2 backdrop-blur rounded">
+                <Input />
+                <button onClick={toggle}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="#8696A0"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </button>
+              </header>
+            </Dialog.Content>
+          </Dialog.Overlay>
+        </Dialog.Portal>
+      </Dialog.Root>
+      <section className="text-sm flex my-4 items-center gap-4  bg-primary-500 max-w-sm md:max-w-lg mx-4 md:mx-auto rounded-lg justify-center sm:justify-between md:px-2">
+        <div className="flex gap-2 items-center">
+          <div className="bg-[#111B21] my-1 px-3 py-1 flex items-center gap-1  rounded-md">
+            <span className="hidden md:block">التصنيف: </span>
+            <span>نظارات</span>
+          </div>
+          <div className="bg-[#111B21] px-3 py-1 flex items-center gap-1  rounded-md">
+            <span className="hidden md:block"> ترتيب حسب: </span>
+            <span>سعر</span>
+            <Dropdown>
+              <Dropdown.Button>
+                <ArrowDownList />
+              </Dropdown.Button>
+              <Dropdown.Menu>
+                <Dropdown.MenuItem>مرتفع إلى منخفض</Dropdown.MenuItem>
+                <Dropdown.MenuItem>منخفض إلى مرتفع </Dropdown.MenuItem>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
         </div>
-        <div className="bg-[#111B21] px-3 py-1 flex items-center gap-1  rounded-md">
-          <span className="hidden md:block"> ترتيب حسب: </span>
-          <span>سعر</span>
-          <Dropdown>
-            <Dropdown.Button>
-              <ArrowDownList />
-            </Dropdown.Button>
-            <Dropdown.Menu>
-              <Dropdown.MenuItem>مرتفع إلى منخفض</Dropdown.MenuItem>
-              <Dropdown.MenuItem>منخفض إلى مرتفع </Dropdown.MenuItem>
-            </Dropdown.Menu>
-          </Dropdown>
+        <div className="flex gap-3 items-center">
+          <span className="hidden md:block">عرض بواسطة</span>
+          <button
+            onClick={() => changeView("list")}
+            disabled={snap.view === "list"}
+          >
+            <ListIcon />
+          </button>
+          <button
+            onClick={() => changeView("grid")}
+            disabled={snap.view === "grid"}
+          >
+            <GridIcon />
+          </button>
+          <button onClick={toggle}>
+            <SearchIcon />
+          </button>
         </div>
-      </div>
-      <div className="flex gap-3 items-center">
-        <span className="hidden md:block">عرض بواسطة</span>
-        <button
-          onClick={() => changeView("list")}
-          disabled={snap.view === "list"}
-        >
-          <ListIcon />
-        </button>
-        <button
-          onClick={() => changeView("grid")}
-          disabled={snap.view === "grid"}
-        >
-          <GridIcon />
-        </button>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
