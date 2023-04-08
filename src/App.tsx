@@ -20,6 +20,7 @@ function App() {
       {query.isSuccess ? (
         <Products view={snap.view} products={query.data} />
       ) : null}
+      <aside className="fixed mt-12 top-0 right-0 h-full bg-white"></aside>
     </>
   );
 }

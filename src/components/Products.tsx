@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
+import EyeIcon from "./EyeIcon";
+import CartIcon from "./CartIcon";
 
 export type Product = {
   title: string;
@@ -8,43 +10,11 @@ export type Product = {
   description: string;
   image: string;
 };
-function CartIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 31 31"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M9.3 24.8C7.595 24.8 6.2155 26.195 6.2155 27.9C6.2155 29.605 7.595 31 9.3 31C11.005 31 12.4 29.605 12.4 27.9C12.4 26.195 11.005 24.8 9.3 24.8ZM24.8 24.8C23.095 24.8 21.7155 26.195 21.7155 27.9C21.7155 29.605 23.095 31 24.8 31C26.505 31 27.9 29.605 27.9 27.9C27.9 26.195 26.505 24.8 24.8 24.8ZM11.005 17.05H22.5525C23.715 17.05 24.738 16.4145 25.265 15.4535L31 4.588L28.2875 3.1L22.5525 13.95H11.6715L5.0685 0H0V3.1H3.1L8.68 14.8645L6.5875 18.6465C5.456 20.7235 6.944 23.25 9.3 23.25H27.9V20.15H9.3L11.005 17.05ZM17.05 0L23.25 6.2L17.05 12.4L14.8645 10.2145L17.3135 7.75H10.85V4.65H17.3135L14.849 2.1855L17.05 0Z"
-        fill="white"
-      />
-    </svg>
-  );
-}
-function EyeIcon({ className = "" }) {
-  return (
-    <svg
-      width="18"
-      height="12"
-      className={className}
-      viewBox="0 0 18 12"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M9 0C4.90909 0 1.41545 2.488 0 6C1.41545 9.512 4.90909 12 9 12C13.0909 12 16.5845 9.512 18 6C16.5845 2.488 13.0909 0 9 0ZM9 10C6.74182 10 4.90909 8.208 4.90909 6C4.90909 3.792 6.74182 2 9 2C11.2582 2 13.0909 3.792 13.0909 6C13.0909 8.208 11.2582 10 9 10ZM9 3.6C7.64182 3.6 6.54545 4.672 6.54545 6C6.54545 7.328 7.64182 8.4 9 8.4C10.3582 8.4 11.4545 7.328 11.4545 6C11.4545 4.672 10.3582 3.6 9 3.6Z"
-        fill="#A6A6A6"
-      />
-    </svg>
-  );
-}
 
 type ProductItemProps = {
   product: Product;
   openDialog: () => void;
+  key: number;
 };
 type ProductLayoutProps = {
   products: Product[];
@@ -178,7 +148,7 @@ export function Products({ view = "grid", products }: ProductsProps) {
     setOpen((open) => (open = !open));
   }, [open]);
   return (
-    <motion.div layout transition={{ duration: 10 }}>
+    <div>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm">
@@ -195,6 +165,6 @@ export function Products({ view = "grid", products }: ProductsProps) {
           <ProductList products={products} openDialog={toggle} />
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
