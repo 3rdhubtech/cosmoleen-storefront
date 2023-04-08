@@ -45,7 +45,10 @@ function ListItem({ product, openDialog }: ProductItemProps) {
         </button>
       ) : null}
       <figure className="aspect-w-16 aspect-h-10">
-        <img src={product.image} className="object-contain w-full h-full" />
+        <img
+          src={product.image}
+          className="object-contain w-full h-full bg-white"
+        />
       </figure>
       <div className="p-6 lg:col-span-5">
         <h3 className="hover:text-brand-300 duration-500 ease-in-out">
@@ -100,7 +103,7 @@ function GridItem({ product, openDialog }: ProductItemProps) {
           <EyeIcon />
         </button>
       ) : null}
-      <figure className="aspect-w-16 aspect-h-10">
+      <figure className="aspect-w-16 aspect-h-10 bg-white">
         <img src={product.image} className="object-contain w-full h-full" />
       </figure>
       <div className="p-6">
