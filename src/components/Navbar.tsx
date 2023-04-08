@@ -14,8 +14,8 @@ export default function Navbar() {
     <div>
       <header className="h-12 w-full bg-primary-500 flex items-center justify-between p-2">
         <nav className="flex gap-2 items-center">
-          <div className="bg-brand-500 h-6 max-w-[6rem] inline-block">
-            <img src={logo} className="w-full h-full p-1 object-fit" />
+          <div className="bg-brand-500 h-6 max-w-[6rem] inline-block flex items-center">
+            <img src={logo} className="w-full p-1" />
           </div>
         </nav>
         <button onClick={toggle}>
