@@ -1,42 +1,13 @@
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useState } from "react";
 import logo from "../assets/logo.png";
-import { changeView } from "../stores";
+import { Input } from "./Input";
 
-function GridIcon() {
-  return (
-    <svg
-      className="h-4 w-4"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect width="8" height="8" rx="1" fill="#00A884" />
-      <rect x="12" width="8" height="8" rx="1" fill="#00A884" />
-      <rect x="12" y="12" width="8" height="8" rx="1" fill="#00A884" />
-      <rect y="12" width="8" height="8" rx="1" fill="#00A884" />
-    </svg>
-  );
-}
-function ListIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-4 w-4"
-      viewBox="0 0 24 28"
-      fill="none"
-    >
-      <path
-        fill="#00A884"
-        d="M14 23H0v2h14v-2Zm6.83 1 2.58 2.58L22 28l-4-4 4-4 1.42 1.41L20.83 24ZM14 13H0v2h14v-2Zm6.83 1 2.58 2.58L22 18l-4-4 4-4 1.42 1.41L20.83 14ZM14 3H0v2h14V3Zm6.83 1 2.58 2.58L22 8l-4-4 4-4 1.42 1.41L20.83 4Z"
-      />
-    </svg>
-  );
-}
-
-function SearchIcon() {
+function SearchIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 27 27"
-      className="h-4 w-4"
+      className={`h-4 w-4 ${className}`}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -49,22 +20,52 @@ function SearchIcon() {
 }
 
 export default function Navbar() {
+  const [showSearch, setShowSearch] = useState(false);
+  const toggle = useCallback(
+    () => setShowSearch((s) => (s = !s)),
+    [showSearch]
+  );
   return (
-    <header className="h-12 w-full bg-primary-500 flex items-center justify-between p-2">
-      <nav className="flex gap-2 items-center">
-        <div className="bg-brand-500 h-6 max-w-[6rem] inline-block">
-          <img src={logo} className="w-full h-full p-1 object-fit" />
-        </div>
-        <button onClick={() => changeView("list")}>
-          <ListIcon />
+    <div>
+      <header className="h-12 w-full bg-primary-500 flex items-center justify-between p-2">
+        <nav className="flex gap-2 items-center">
+          <div className="bg-brand-500 h-6 max-w-[6rem] inline-block">
+            <img src={logo} className="w-full h-full p-1 object-fit" />
+          </div>
+        </nav>
+        <button onClick={toggle}>
+          <SearchIcon className="lg:hidden" />
         </button>
-        <button onClick={() => changeView("grid")}>
-          <GridIcon />
-        </button>
-      </nav>
-      <div>
-        <SearchIcon />
-      </div>
-    </header>
+      </header>
+      <AnimatePresence>
+        {showSearch && (
+          <motion.header
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ ease: "linear", duration: 1 }}
+            exit={{ opacity: 0 }}
+            className="h-12 w-full bg-primary-700 gap-2 flex items-center justify-between p-2 backdrop-blur"
+          >
+            <Input />
+            <button onClick={toggle}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="#8696A0"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+          </motion.header>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
