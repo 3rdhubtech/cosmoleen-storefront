@@ -5,7 +5,7 @@ function ListIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className="h-4 w-4"
+      className="h-5 w-5"
       viewBox="0 0 24 28"
       fill="none"
     >
@@ -19,7 +19,7 @@ function ListIcon() {
 function GridIcon() {
   return (
     <svg
-      className="h-4 w-4"
+      className="h-5 w-5"
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -68,7 +68,7 @@ export function Arranges() {
           </Dropdown>
         </div>
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-3 items-center">
         <span className="hidden md:block">عرض بواسطة</span>
         <button
           onClick={() => changeView("list")}
