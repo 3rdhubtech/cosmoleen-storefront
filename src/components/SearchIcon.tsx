@@ -2,7 +2,7 @@ export default function SearchIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 27 27"
-      className={`h-4 w-4 ${className}`}
+      className={`h-5 w-5 ${className}`}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >

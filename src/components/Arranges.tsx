@@ -110,16 +110,18 @@ export function Arranges() {
           <button
             onClick={() => changeView("list")}
             disabled={snap.view === "list"}
+            className="p-0"
           >
             <ListIcon />
           </button>
           <button
             onClick={() => changeView("grid")}
             disabled={snap.view === "grid"}
+            className="p-0"
           >
             <GridIcon />
           </button>
-          <button onClick={toggle}>
+          <button onClick={toggle} className="p-0">
             <SearchIcon />
           </button>
         </div>
