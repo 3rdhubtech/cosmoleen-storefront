@@ -1,4 +1,4 @@
-import logo from "../assets/logo.png";
+import logo from "../assets/Maped.png";
 
 export default function Navbar() {
   return (
