@@ -28,7 +28,7 @@ function ListItem({ product, openDialog }: ProductItemProps) {
   return (
     <motion.article
       layout
-      className="relative rounded-md shadow overflow-hidden bg-primary-500 grid grid-rows-1 grid-cols-3 lg:grid-cols-7 max-h-48 mx-4"
+      className="relative rounded-md shadow overflow-hidden bg-primary-500 grid grid-rows-1 grid-cols-2 max-h-48 mx-4"
       onMouseOver={hovered}
       onMouseOut={hoverOut}
       onClick={openDialog}
@@ -44,25 +44,27 @@ function ListItem({ product, openDialog }: ProductItemProps) {
           <EyeIcon />
         </button>
       ) : null}
-      <figure className="aspect-w-16 aspect-h-10">
+      <figure className="row-span-2 aspect-w-16 aspect-h-10">
         <img
           src={product.image}
           className="object-contain w-full h-full bg-white"
         />
       </figure>
-      <div className="p-6 lg:col-span-5">
-        <h3 className="hover:text-brand-300 duration-500 ease-in-out">
-          {product.title}
-        </h3>
-        <p className="text-slate-400 line-clamp-1 md:line-clamp-2">
-          {product.description}
-        </p>
-      </div>
-      <div className="flex flex-col justify-between p-2 justify-self-end items-end">
-        <span className="font-bold mt-2">{product.price} د.ل</span>
-        <button className="font-normal bg-brand-500 hover:bg-brand-700 text-white duration-500 ease-in-out py-2 px-4 rounded">
-          <CartIcon />
-        </button>
+      <div className="flex flex-col justify-between p-2">
+        <div>
+          <h3 className="hover:text-brand-300 duration-500 ease-in-out">
+            {product.title}
+          </h3>
+          <p className="text-slate-400 line-clamp-1 md:line-clamp-2">
+            {product.description}
+          </p>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-bold mt-2">{product.price} د.ل</span>
+          <button className="font-normal bg-brand-500 hover:bg-brand-700 text-white duration-500 ease-in-out py-2 px-4 rounded">
+            <CartIcon />
+          </button>
+        </div>
       </div>
     </motion.article>
   );
@@ -156,7 +158,7 @@ export function Products({ view = "grid", products }: ProductsProps) {
         <Dialog.Portal>
           <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm">
             <Dialog.Content className="min-w-md bg-white p-8">
-              hello
+              <div>hello</div>
             </Dialog.Content>
           </Dialog.Overlay>
         </Dialog.Portal>

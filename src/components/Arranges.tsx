@@ -60,27 +60,11 @@ export function Arranges() {
     <>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="inset-0 fixed grid place-items-top backdrop-blur-sm">
+          <Dialog.Overlay className="inset-0 fixed backdrop-blur-sm">
             <Dialog.Content className="min-w-md p-8">
-              <header className="w-full bg-primary-500 gap-2 flex items-center justify-between p-2 backdrop-blur rounded">
+              <div className="bg-primary-500">
                 <Input />
-                <button onClick={toggle}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="#8696A0"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </button>
-              </header>
+              </div>
             </Dialog.Content>
           </Dialog.Overlay>
         </Dialog.Portal>
@@ -110,14 +94,14 @@ export function Arranges() {
           <button
             onClick={() => changeView("list")}
             disabled={snap.view === "list"}
-            className="p-1"
+            className="p-1 disabled:bg-primary-700 rounded"
           >
             <ListIcon />
           </button>
           <button
             onClick={() => changeView("grid")}
             disabled={snap.view === "grid"}
-            className="p-1"
+            className="p-1 disabled:bg-primary-700 rounded"
           >
             <GridIcon />
           </button>
