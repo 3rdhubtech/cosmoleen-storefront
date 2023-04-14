@@ -1,13 +1,22 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ReactElement, ReactNode, useCallback, useState } from "react";
+import {
+  Fragment,
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import parse from "html-react-parser";
 import * as Dialog from "@radix-ui/react-dialog";
 import EyeIcon from "./EyeIcon";
 import CartIcon from "./CartIcon";
 import { addProductToCart } from "./CartSide";
 import { proxy, useSnapshot } from "valtio";
-import { CircularProgress } from "react-loading-indicators";
-import { useQuery } from "@tanstack/react-query";
+import { CircularProgress, Seek } from "react-loading-indicators";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+
 const dialogStore = proxy<{ content: Product | null; isOpen: boolean }>({
   content: null,
   isOpen: false,
@@ -62,9 +71,7 @@ type ProductItemProps = {
 
   key: number;
 };
-type ProductLayoutProps = {
-  products: Product[];
-};
+
 function ListItem({ product }: ProductItemProps) {
   const [isHovering, setIsHovering] = useState(false);
   const hovered = useCallback(() => setIsHovering(true), [isHovering]);
@@ -126,18 +133,6 @@ function ListItem({ product }: ProductItemProps) {
         </div>
       </div>
     </motion.article>
-  );
-}
-
-function ProductList({ products }: ProductLayoutProps) {
-  return (
-    <div className="container mx-auto">
-      <section className="grid grid-cols-1 gap-4">
-        {products.map((p, idx) => (
-          <ListItem product={p} key={idx} />
-        ))}
-      </section>
-    </div>
   );
 }
 
@@ -203,33 +198,29 @@ function GridItem({ product }: ProductItemProps) {
     </motion.article>
   );
 }
-function ProductGrid({ products }: ProductLayoutProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="container mx-auto"
-    >
-      <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {products.map((p, idx) => (
-          <GridItem product={p} key={idx} />
-        ))}
-      </section>
-    </motion.div>
-  );
-}
+
 type ProductsProps = {
   view: "grid" | "list";
 };
-async function getProducts(): Promise<Response> {
-  const res = await fetch("api/products");
+async function getProducts({ pageParam = 1 }): Promise<Response> {
+  const res = await fetch("api/products?page=" + pageParam);
   return await res.json();
 }
 export function Products({ view = "grid" }: ProductsProps) {
+  const { ref, inView } = useInView();
   const snap = useSnapshot(dialogStore);
-  const query = useQuery(["products"], getProducts);
+  const query = useInfiniteQuery(["products"], getProducts, {
+    getNextPageParam: (lastPage) => {
+      const { current_page, last_page } = lastPage.meta;
+      return current_page < lastPage ? current_page + 1 : undefined;
+    },
+  });
+  useEffect(() => {
+    if (inView) {
+      query.fetchNextPage();
+    }
+  }, [inView]);
+
   if (!query.data)
     return (
       <div className="w-full h-full grid place-items-center">
@@ -237,8 +228,9 @@ export function Products({ view = "grid" }: ProductsProps) {
         <CircularProgress variant="bubble-dotted" size="medium" />
       </div>
     );
+
   return (
-    <div>
+    <>
       {snap.content ? (
         <Dialog.Root open={snap.isOpen} onOpenChange={setIsOpen}>
           <Dialog.Portal>
@@ -259,14 +251,31 @@ export function Products({ view = "grid" }: ProductsProps) {
           </Dialog.Portal>
         </Dialog.Root>
       ) : null}
-      <AnimatePresence mode="wait">
-        {view === "grid" ? (
-          <ProductGrid products={query.data.data} />
-        ) : (
-          <ProductList products={query.data.data} />
-        )}
-      </AnimatePresence>
-    </div>
+      {query.data.pages.map((group, i) => (
+        <Fragment key={i}>
+          {view === "grid" ? (
+            <div className="container mx-auto mt-4">
+              <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                {group.data.map((product, i) => (
+                  <GridItem product={product} key={i} />
+                ))}
+              </section>
+            </div>
+          ) : (
+            <div className="container mx-auto">
+              <section className="grid grid-cols-1 gap-4">
+                {group.data.map((product, i) => (
+                  <ListItem product={product} key={i} />
+                ))}
+              </section>
+            </div>
+          )}
+        </Fragment>
+      ))}
+      <div ref={ref} className="w-full h-24 grid place-items-center">
+        <Seek size="medium" />
+      </div>
+    </>
   );
 }
 function Slider({
@@ -287,7 +296,7 @@ function Slider({
   }, [counter]);
 
   return (
-    <motion.div className="max-w-min relative" layout>
+    <div className="max-w-min relative">
       <button
         className="px-1 py-2 absolute bottom-1/2 translate-y-1/2 hover:bg-gray-100 rounded-e-md"
         onClick={nextSlide}
@@ -329,7 +338,7 @@ function Slider({
           />
         </svg>
       </button>
-    </motion.div>
+    </div>
   );
 }
 Slider.Item = SliderItem;
