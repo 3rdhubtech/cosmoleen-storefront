@@ -1,11 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  ReactElement,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { ReactElement, ReactNode, useCallback, useState } from "react";
 import parse from "html-react-parser";
 import * as Dialog from "@radix-ui/react-dialog";
 import EyeIcon from "./EyeIcon";
@@ -281,7 +275,7 @@ function Slider({
   children: ReactElement<typeof Slider.Item>[];
 }) {
   const [counter, setCounter] = useState(0);
-  console.log(children);
+
   const len = children.length;
   const nextSlide = useCallback(() => {
     if (counter < len - 1) setCounter((counter) => (counter += 1));
