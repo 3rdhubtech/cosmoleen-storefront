@@ -11,8 +11,7 @@ import { Input } from "./Input";
 import { derive } from "valtio/utils";
 import { toast } from "react-toastify";
 
-type ProductCart = Product & { count: number };
-const cartStore = proxy<{ products: ProductCart[]; total: number }>(
+const cartStore = proxy<{ products: any[]; total: number }>(
   JSON.parse(localStorage?.getItem("cart")) || {
     products: [],
   }
@@ -26,11 +25,11 @@ const calculations = derive({
     ),
 });
 
-export const removeProductFromCart = (p: Product | ProductCart) => {
+export const removeProductFromCart = (p: any) => {
   const idx = cartStore.products.findIndex((pc) => p.id === pc.id);
   cartStore.products.splice(idx, 1);
 };
-export const addProductToCart = (p: Product | ProductCart, count = 1) => {
+export const addProductToCart = (p: Product, count = 1) => {
   const idx = cartStore.products.findIndex((pc) => p.id === pc.id);
   if (idx === -1) {
     cartStore.products.push({ count, ...p });
@@ -40,7 +39,7 @@ export const addProductToCart = (p: Product | ProductCart, count = 1) => {
   const product = cartStore.products[idx];
   if (product.quantity > product.count) product.count++;
 };
-const removeOne = (p: Product | ProductCart) => {
+const removeOne = (p: any) => {
   const idx = cartStore.products.findIndex((pc) => p.id === pc.id);
   if (idx === -1) {
     return;
@@ -80,6 +79,7 @@ function CloseIcon() {
 }
 function Cart() {
   const snap = useSnapshot(cartStore);
+
   return (
     <div className="p-4 bg-primary-500 rounded flex flex-col items-center gap-4 min-w-[20rem]">
       <h4 className="font-semibold">عربة التسوق</h4>

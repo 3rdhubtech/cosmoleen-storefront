@@ -240,24 +240,26 @@ export function Products({ view = "grid" }: ProductsProps) {
     return <CircularProgress variant="bubble-dotted" size="medium" />;
   return (
     <div>
-      <Dialog.Root open={snap.isOpen} onOpenChange={setIsOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm z-50">
-            <Dialog.Content className="flex flex-col gap-4 max-w-min min-w-md bg-primary-700 p-8">
-              <h4 className="font-bold">{snap!.content!.name}</h4>
+      {snap.content ? (
+        <Dialog.Root open={snap.isOpen} onOpenChange={setIsOpen}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm z-50">
+              <Dialog.Content className="flex flex-col gap-4 max-w-min min-w-md bg-primary-700 p-8">
+                <h4 className="font-bold">{snap!.content!.name}</h4>
 
-              <Slider>
-                {snap!.content!.images.map((s, idx) => (
-                  <Slider.Item key={idx}>
-                    <img src={`/product_image/${s}`} />
-                  </Slider.Item>
-                ))}
-              </Slider>
-              <div>{parse(snap!.content!.description || "")}</div>
-            </Dialog.Content>
-          </Dialog.Overlay>
-        </Dialog.Portal>
-      </Dialog.Root>
+                <Slider>
+                  {snap!.content!.images.map((s, idx) => (
+                    <Slider.Item key={idx}>
+                      <img src={`/product_image/${s}`} />
+                    </Slider.Item>
+                  ))}
+                </Slider>
+                <div>{parse(snap!.content!.description || "")}</div>
+              </Dialog.Content>
+            </Dialog.Overlay>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ) : null}
       <AnimatePresence mode="wait">
         {view === "grid" ? (
           <ProductGrid products={query.data.data} />
