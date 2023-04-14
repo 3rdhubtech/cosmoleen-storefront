@@ -3,6 +3,14 @@
     {
       "source": "/api/:path(.*)",
       "destination": "https://cosmoleen.com/api/:path"
+    },
+    {
+      "source": "/is_cover_image/:path(.*)",
+      "destination": "https://cosmoleen.com/storage/uploads/is_cover_image/:path"
+    },
+    {
+      "source": "/product_image/:path(.*)",
+      "destination": "https://cosmoleen.com/storage/uploads/product_image/:path"
     }
   ]
 }
