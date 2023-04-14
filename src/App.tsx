@@ -1,29 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { ToastContainer } from "react-toastify";
 import { useSnapshot } from "valtio";
 import { Arranges } from "./components/Arranges";
-import CartIcon from "./components/CartIcon";
 import CartSide from "./components/CartSide";
 import Navbar from "./components/Navbar";
-import { Product, Products } from "./components/Products";
+import { Products } from "./components/Products";
 import { mainStore } from "./stores";
-
-async function getProducts(): Promise<Product[]> {
-  const res = await fetch("https://fakestoreapi.com/products");
-  return await res.json();
-}
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const snap = useSnapshot(mainStore);
-  const query = useQuery(["products"], getProducts);
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        rtl
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       <Navbar />
       <Arranges />
-      {query.isSuccess ? (
-        <Products view={snap.view} products={query.data} />
-      ) : null}
+      <Products view={snap.view} />
+
       <CartSide />
     </>
   );

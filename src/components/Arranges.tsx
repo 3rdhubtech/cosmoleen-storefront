@@ -5,6 +5,7 @@ import { changeView, mainStore } from "../stores";
 import Dropdown from "./Dropdown";
 import { Input } from "./Input";
 import SearchIcon from "./SearchIcon";
+
 function ListIcon() {
   return (
     <svg
