@@ -212,7 +212,7 @@ export function Products({ view = "grid" }: ProductsProps) {
   const query = useInfiniteQuery(["products"], getProducts, {
     getNextPageParam: (lastPage) => {
       const { current_page, last_page } = lastPage.meta;
-      return current_page < lastPage ? current_page + 1 : undefined;
+      return current_page < last_page ? current_page + 1 : undefined;
     },
   });
   useEffect(() => {
