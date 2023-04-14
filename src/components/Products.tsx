@@ -237,7 +237,12 @@ export function Products({ view = "grid" }: ProductsProps) {
   const snap = useSnapshot(dialogStore);
   const query = useQuery(["products"], getProducts);
   if (!query.data)
-    return <CircularProgress variant="bubble-dotted" size="medium" />;
+    return (
+      <div className="w-full h-full grid place-items-center">
+        {" "}
+        <CircularProgress variant="bubble-dotted" size="medium" />
+      </div>
+    );
   return (
     <div>
       {snap.content ? (
