@@ -165,10 +165,10 @@ export default function CartSide() {
           onClick={toggleCart}
         >
           <div
-            className="relative grid grid-rows-3 grid-cols-1 px-8 max-w-md bg-primary-700 h-full place-items-center justify-self-end"
+            className="grid grid-rows-3 grid-cols-1 px-8 max-w-md bg-primary-700 h-full place-items-center justify-self-end"
             onClick={(e) => e.stopPropagation()}
           >
-            <button className=" absolute top-2 right-2" onClick={toggleCart}>
+            <button className="top-2 right-2 fixed" onClick={toggleCart}>
               <CloseIcon />
             </button>
             <Cart />

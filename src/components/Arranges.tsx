@@ -70,11 +70,20 @@ export function Arranges() {
           </Dialog.Overlay>
         </Dialog.Portal>
       </Dialog.Root>
-      <section className="text-sm flex my-4 items-center gap-4  bg-primary-500 max-w-sm md:max-w-lg mx-4 md:mx-auto rounded-lg justify-center sm:justify-between md:px-2">
+      <section className="text-sm flex my-4 items-center gap-4  bg-primary-500 max-w-sm md:max-w-xl mx-4 md:mx-auto rounded-lg justify-center sm:justify-between md:px-2">
         <div className="flex gap-2 items-center">
           <div className="bg-[#111B21] my-1 px-3 py-1 flex items-center gap-1  rounded-md">
             <span className="hidden md:block">التصنيف: </span>
             <span>نظارات</span>
+            <Dropdown>
+              <Dropdown.Button>
+                <ArrowDownList />
+              </Dropdown.Button>
+              <Dropdown.Menu>
+                <Dropdown.MenuItem>مرتفع إلى منخفض</Dropdown.MenuItem>
+                <Dropdown.MenuItem>منخفض إلى مرتفع </Dropdown.MenuItem>
+              </Dropdown.Menu>
+            </Dropdown>
           </div>
           <div className="bg-[#111B21] px-3 py-1 flex items-center gap-1  rounded-md">
             <span className="hidden md:block"> ترتيب حسب: </span>

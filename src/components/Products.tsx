@@ -1,6 +1,8 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
+  forwardRef,
   Fragment,
+  HTMLAttributes,
   ReactElement,
   ReactNode,
   useCallback,
@@ -16,7 +18,15 @@ import { proxy, useSnapshot } from "valtio";
 import { CircularProgress, Seek } from "react-loading-indicators";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-
+import { VariantProps, cva } from "cva";
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
 const dialogStore = proxy<{ content: Product | null; isOpen: boolean }>({
   content: null,
   isOpen: false,
@@ -41,6 +51,10 @@ type Meta = {
   to: number;
   total: number;
 };
+type Variant = {
+  variant_name: string;
+  variant_options: string[];
+};
 type Links = {
   first: string;
   last: string;
@@ -60,19 +74,58 @@ export type Product = {
   SKU: string;
   custom_fields: Record<string, string>;
   has_variant: boolean;
-  variants: string;
+  variants: Variant[];
   cover: string;
   description: string;
   images: string[];
 };
 
-type ProductItemProps = {
-  product: Product;
-
-  key: number;
+type ProductsProps = {
+  view: "grid" | "list";
 };
+async function getProducts({ pageParam = 1 }): Promise<Response> {
+  const res = await fetch("api/products?page=" + pageParam);
+  return await res.json();
+}
 
-function ListItem({ product }: ProductItemProps) {
+const productViewVariant = cva("grid grid-cols-1", {
+  variants: {
+    view: {
+      grid: "md:grid-cols-3 lg:grid-cols-4 gap-8",
+      list: "gap-4",
+    },
+  },
+});
+interface ProductViewProps
+  extends HTMLAttributes<HTMLElement>,
+    VariantProps<typeof productViewVariant> {}
+const ProductView = forwardRef<HTMLElement, ProductViewProps>(
+  ({ className, view, ...props }, ref) => {
+    return (
+      <section
+        className={cn(productViewVariant({ view, className }))}
+        ref={ref}
+        {...props}
+      ></section>
+    );
+  }
+);
+const itemProps = cva(
+  "relative rounded-md shadow overflow-hidden bg-primary-500 mx-4",
+  {
+    variants: {
+      view: {
+        grid: "flex flex-col justify-between",
+        list: "grid grid-rows-1 grid-cols-2 max-h-48",
+      },
+    },
+  }
+);
+type ItemProps = VariantProps<typeof itemProps> & {
+  product: Product;
+  key: any;
+};
+const Item = ({ view, product }: ItemProps) => {
   const [isHovering, setIsHovering] = useState(false);
   const hovered = useCallback(() => setIsHovering(true), [isHovering]);
   const hoverOut = useCallback(() => setIsHovering(false), [isHovering]);
@@ -80,7 +133,7 @@ function ListItem({ product }: ProductItemProps) {
   return (
     <motion.article
       layout
-      className="relative rounded-md shadow overflow-hidden bg-primary-500 grid grid-rows-1 grid-cols-2 max-h-48 mx-4"
+      className={cn(itemProps({ view }))}
       onMouseOver={hovered}
       onMouseOut={hoverOut}
       onClick={toggleDialog}
@@ -97,22 +150,34 @@ function ListItem({ product }: ProductItemProps) {
           <EyeIcon />
         </button>
       ) : null}
-      <figure className="row-span-2 aspect-w-16 aspect-h-10">
+      <figure className="row-span-2 aspect-w-16 aspect-h-10 bg-white">
         <img
           src={`/is_cover_image/${product.cover}`}
-          className="object-contain w-full h-full bg-white"
+          className="object-contain w-full h-full"
         />
       </figure>
-      <div className="flex flex-col justify-between p-2">
-        <div>
-          <h3 className="hover:text-brand-300 duration-500 ease-in-out">
+      <div
+        className={cn({
+          "flex flex-col justify-between p-2": view === "list",
+        })}
+      >
+        <div className={cn({ "p-6": view === "grid" })}>
+          <h3 className="title h5 text-lg font-medium hover:text-brand-300 duration-500 ease-in-out">
             {product.name}
           </h3>
-          <p className="text-slate-400 line-clamp-1 md:line-clamp-2">
+          <span
+            className={cn("text-slate-400  mt-3 line-clamp-3", {
+              "line-clamp-1 md:line-clamp-2": view === "list",
+            })}
+          >
             {parse(product.description)}
-          </p>
+          </span>
         </div>
-        <div className="flex justify-between">
+        <div
+          className={cn("flex justify-between", {
+            "p-2 items-center": view === "grid",
+          })}
+        >
           {product.has_variant ? (
             <span></span>
           ) : (
@@ -134,78 +199,8 @@ function ListItem({ product }: ProductItemProps) {
       </div>
     </motion.article>
   );
-}
-
-function GridItem({ product }: ProductItemProps) {
-  const [isHovering, setIsHovering] = useState(false);
-  const hovered = useCallback(() => setIsHovering(true), [isHovering]);
-  const hoverOut = useCallback(() => setIsHovering(false), [isHovering]);
-  return (
-    <motion.article
-      className="relative rounded-md shadow overflow-hidden bg-primary-500 flex flex-col justify-between mx-4"
-      onMouseOver={hovered}
-      onMouseOut={hoverOut}
-      onClick={toggleDialog}
-    >
-      {isHovering ? (
-        <button
-          className="absolute top-1 right-1 z-10"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDialogContent(product);
-            toggleDialog();
-          }}
-        >
-          <EyeIcon />
-        </button>
-      ) : null}
-      <figure
-        className="aspect-w-16 aspect-h-10 bg-white"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img
-          src={`/is_cover_image/${product.cover}`}
-          className="object-contain w-full h-full"
-        />
-      </figure>
-      <div className="p-6">
-        <h3 className="title h5 text-lg font-medium hover:text-brand-300 duration-500 ease-in-out">
-          {product.name}
-        </h3>
-        <p className="text-slate-400 mt-3 line-clamp-3">
-          {parse(product.description)}
-        </p>
-      </div>
-      <div className="flex justify-between p-2 items-center">
-        {product.has_variant ? (
-          <span></span>
-        ) : (
-          <span className="font-bold">{product.price} د.ل</span>
-        )}
-        <button
-          className="font-normal bg-brand-500 hover:bg-brand-700 text-white duration-500 ease-in-out py-2 px-4 rounded"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (product.has_variant) {
-              toggleDialog();
-              setDialogContent(product);
-            } else addProductToCart(product);
-          }}
-        >
-          <CartIcon />
-        </button>
-      </div>
-    </motion.article>
-  );
-}
-
-type ProductsProps = {
-  view: "grid" | "list";
 };
-async function getProducts({ pageParam = 1 }): Promise<Response> {
-  const res = await fetch("api/products?page=" + pageParam);
-  return await res.json();
-}
+
 export function Products({ view = "grid" }: ProductsProps) {
   const { ref, inView } = useInView();
   const snap = useSnapshot(dialogStore);
@@ -224,7 +219,6 @@ export function Products({ view = "grid" }: ProductsProps) {
   if (!query.data)
     return (
       <div className="w-full h-full grid place-items-center">
-        {" "}
         <CircularProgress variant="bubble-dotted" size="medium" />
       </div>
     );
@@ -235,44 +229,73 @@ export function Products({ view = "grid" }: ProductsProps) {
         <Dialog.Root open={snap.isOpen} onOpenChange={setIsOpen}>
           <Dialog.Portal>
             <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm z-50">
-              <Dialog.Content className="flex flex-col gap-4 max-w-min min-w-md bg-primary-700 p-8">
+              <Dialog.Content className="flex flex-col gap-4 max-w-min min-w-lg bg-primary-700 p-8">
                 <h4 className="font-bold">{snap!.content!.name}</h4>
 
                 <Slider>
                   {snap!.content!.images.map((s, idx) => (
                     <Slider.Item key={idx}>
-                      <img src={`/product_image/${s}`} />
+                      <img
+                        className="w-full h-56"
+                        src={`/product_image/${s}`}
+                      />
                     </Slider.Item>
                   ))}
                 </Slider>
-                <div>{parse(snap!.content!.description || "")}</div>
+                <div className="border-2 py-1 px-2 rounded-xl">
+                  {parse(snap!.content!.description)}
+                </div>
+
+                {Object.entries(snap.content.custom_fields).every(
+                  ([k, _v]) => k !== ""
+                ) ? (
+                  <div className="border-2 py-1 px-2 rounded-xl empty mt-3 flex flex-col gap-4 text-xs">
+                    {Object.entries(snap!.content.custom_fields).map(
+                      ([key, value], i) => {
+                        return (
+                          <span className="block">
+                            {key} : {value}
+                          </span>
+                        );
+                      }
+                    )}
+                  </div>
+                ) : null}
+                {snap.content.has_variant &&
+                  snap!.content!.variants.map((v) => {
+                    return (
+                      <Select dir="rtl">
+                        <SelectTrigger>
+                          <SelectValue placeholder={v.variant_name} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {v.variant_options.map((o) => {
+                            return <SelectItem value={o}>{o}</SelectItem>;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    );
+                  })}
               </Dialog.Content>
             </Dialog.Overlay>
           </Dialog.Portal>
         </Dialog.Root>
       ) : null}
-      {query.data.pages.map((group, i) => (
-        <Fragment key={i}>
-          {view === "grid" ? (
-            <div className="container mx-auto mt-4">
-              <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                {group.data.map((product, i) => (
-                  <GridItem product={product} key={i} />
-                ))}
-              </section>
-            </div>
-          ) : (
-            <div className="container mx-auto">
-              <section className="grid grid-cols-1 gap-4">
-                {group.data.map((product, i) => (
-                  <ListItem product={product} key={i} />
-                ))}
-              </section>
-            </div>
+      <div className="container mx-auto">
+        <ProductView view={view}>
+          {query.data.pages.map((group) =>
+            group.data.map((product, i) => (
+              <Item view={view} product={product} key={`product-${i}`} />
+            ))
           )}
-        </Fragment>
-      ))}
-      <div ref={ref} className="w-full h-24 grid place-items-center">
+        </ProductView>
+      </div>
+      <div
+        ref={ref}
+        className={cn("w-full h-24 grid place-items-center", {
+          hidden: !query.hasNextPage,
+        })}
+      >
         <Seek size="medium" />
       </div>
     </>
@@ -298,7 +321,7 @@ function Slider({
   return (
     <div className="max-w-min relative">
       <button
-        className="px-1 py-2 absolute bottom-1/2 translate-y-1/2 hover:bg-gray-100 rounded-e-md"
+        className=" py-2 absolute bottom-1/2 translate-y-1/2 bg-gray-400  hover:bg-gray-300 rounded-e-md"
         onClick={nextSlide}
       >
         <svg
@@ -320,7 +343,7 @@ function Slider({
         {children[counter]}
       </div>
       <button
-        className="px-1 py-2 absolute bottom-1/2 right-0 translate-y-1/2 hover:bg-gray-100 rounded-s-md"
+        className=" py-2 absolute bottom-1/2 right-0 translate-y-1/2 bg-gray-400 hover:bg-gray-300 rounded-s-md"
         onClick={prevSlide}
       >
         <svg

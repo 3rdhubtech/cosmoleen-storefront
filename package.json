@@ -11,18 +11,25 @@
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.3",
     "@radix-ui/react-dropdown-menu": "^2.0.4",
+    "@radix-ui/react-select": "^1.2.1",
     "@tanstack/query-sync-storage-persister": "^4.27.1",
     "@tanstack/react-query": "^4.28.0",
     "@tanstack/react-query-persist-client": "^4.28.0",
+    "clsx": "^1.2.1",
+    "cva": "npm:class-variance-authority@^0.5.2",
+    "dotenv": "^16.0.3",
     "framer-motion": "^10.11.2",
     "html-react-parser": "^3.0.15",
+    "lucide-react": "^0.160.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.43.9",
     "react-intersection-observer": "^9.4.3",
     "react-loading-indicators": "^0.1.1",
     "react-toastify": "^9.1.2",
-    "valtio": "^1.10.3"
+    "tailwind-merge": "^1.12.0",
+    "valtio": "^1.10.3",
+    "vite-tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",

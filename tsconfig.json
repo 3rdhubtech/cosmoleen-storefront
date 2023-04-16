@@ -15,14 +15,15 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "paths": {
+      "@": ["./src"],
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "src",
-    "../../../AppData/Roaming/.emacs.d/var/backup/!drive_c!Users!mzerone!Desktop!workspace!storefront-demo!src!components!TrashIcon.tsx~",
-    "../../../AppData/Roaming/.emacs.d/var/backup/!drive_c!Users!mzerone!Desktop!workspace!storefront-demo!src!components!MinusSignIcon.tsx~",
-    "../../../AppData/Roaming/.emacs.d/var/backup/!drive_c!Users!mzerone!Desktop!workspace!storefront-demo!src!components!PlusSignIcon.tsx~",
-    "../../../AppData/Roaming/.emacs.d/var/backup/!drive_c!Users!mzerone!Desktop!workspace!storefront-demo!src!components!CartSide.tsx~"
+    "../../../AppData/Roaming/.emacs.d/var/backup/!drive_c!Users!mzerone!Desktop!workspace!storefront-demo!src!components!Select.tsx~"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
