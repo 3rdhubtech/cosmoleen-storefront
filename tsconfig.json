@@ -21,9 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "src",
-    "../../../AppData/Roaming/.emacs.d/var/backup/!drive_c!Users!mzerone!Desktop!workspace!storefront-demo!src!components!Select.tsx~"
-  ],
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

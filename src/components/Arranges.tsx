@@ -1,53 +1,31 @@
 import * as Dialog from "@radix-ui/react-dialog";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ChevronDownIcon,
+  LayoutGridIcon,
+  LayoutListIcon,
+  SearchIcon,
+} from "lucide-react";
 import { useCallback, useState } from "react";
 import { useSnapshot } from "valtio";
 import { changeView, mainStore } from "../stores";
 import Dropdown from "./Dropdown";
 import { Input } from "./Input";
-import SearchIcon from "./SearchIcon";
 
-function ListIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-5 w-5"
-      viewBox="0 0 24 28"
-      fill="none"
-    >
-      <path
-        fill="#00A884"
-        d="M14 23H0v2h14v-2Zm6.83 1 2.58 2.58L22 28l-4-4 4-4 1.42 1.41L20.83 24ZM14 13H0v2h14v-2Zm6.83 1 2.58 2.58L22 18l-4-4 4-4 1.42 1.41L20.83 14ZM14 3H0v2h14V3Zm6.83 1 2.58 2.58L22 8l-4-4 4-4 1.42 1.41L20.83 4Z"
-      />
-    </svg>
-  );
-}
-function GridIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect width="8" height="8" rx="1" fill="#00A884" />
-      <rect x="12" width="8" height="8" rx="1" fill="#00A884" />
-      <rect x="12" y="12" width="8" height="8" rx="1" fill="#00A884" />
-      <rect y="12" width="8" height="8" rx="1" fill="#00A884" />
-    </svg>
-  );
-}
-function ArrowDownList() {
-  return (
-    <svg
-      width="10"
-      height="5"
-      viewBox="0 0 10 5"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M0 0L5 5L10 0H0Z" fill="white" />
-    </svg>
-  );
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
+
+type Category = {
+  id: number;
+  name: string;
+};
+async function getCategories(): Promise<Category[]> {
+  return fetch("/api/categories").then((r) => r.json());
 }
 
 export function Arranges() {
@@ -56,6 +34,7 @@ export function Arranges() {
   const toggle = useCallback(() => {
     setOpen((open) => (open = !open));
   }, [open]);
+  const query = useQuery(["categories"], getCategories);
 
   return (
     <>
@@ -74,23 +53,26 @@ export function Arranges() {
         <div className="flex gap-2 items-center">
           <div className="bg-[#111B21] my-1 px-3 py-1 flex items-center gap-1  rounded-md">
             <span className="hidden md:block">التصنيف: </span>
-            <span>نظارات</span>
-            <Dropdown>
-              <Dropdown.Button>
-                <ArrowDownList />
-              </Dropdown.Button>
-              <Dropdown.Menu>
-                <Dropdown.MenuItem>مرتفع إلى منخفض</Dropdown.MenuItem>
-                <Dropdown.MenuItem>منخفض إلى مرتفع </Dropdown.MenuItem>
-              </Dropdown.Menu>
-            </Dropdown>
+
+            <Select dir="rtl">
+              <SelectTrigger>
+                <SelectValue placeholder="الكل" />
+              </SelectTrigger>
+              <SelectContent>
+                {query?.data?.map((c) => (
+                  <SelectItem value={`${c.id}`} key={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="bg-[#111B21] px-3 py-1 flex items-center gap-1  rounded-md">
             <span className="hidden md:block"> ترتيب حسب: </span>
             <span>سعر</span>
             <Dropdown>
               <Dropdown.Button>
-                <ArrowDownList />
+                <ChevronDownIcon />
               </Dropdown.Button>
               <Dropdown.Menu>
                 <Dropdown.MenuItem>مرتفع إلى منخفض</Dropdown.MenuItem>
@@ -106,14 +88,14 @@ export function Arranges() {
             disabled={snap.view === "list"}
             className="p-1 disabled:bg-primary-700 rounded"
           >
-            <ListIcon />
+            <LayoutListIcon />
           </button>
           <button
             onClick={() => changeView("grid")}
             disabled={snap.view === "grid"}
             className="p-1 disabled:bg-primary-700 rounded"
           >
-            <GridIcon />
+            <LayoutGridIcon />
           </button>
           <button onClick={toggle} className="p-1">
             <SearchIcon />

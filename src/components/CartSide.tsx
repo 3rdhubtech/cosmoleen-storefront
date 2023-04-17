@@ -1,18 +1,18 @@
 import { useCallback, useState } from "react";
 import { proxy, subscribe, useSnapshot } from "valtio";
-import CartIcon from "./CartIcon";
-import MinusSignIcon from "./MinusSignIcon";
-import PlusSignIcon from "./PlusSignIcon";
+
+import { MinusIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Product } from "./Products";
-import TrashIcon from "./TrashIcon";
+
 import { useForm } from "react-hook-form";
 import { Input } from "./Input";
 
 import { derive } from "valtio/utils";
 import { toast } from "react-toastify";
+import { ShoppingCart } from "lucide-react";
 
 const cartStore = proxy<{ products: any[]; total: number }>(
-  JSON.parse(localStorage?.getItem("cart")) || {
+  JSON.parse(localStorage?.getItem("cart") as string) || {
     products: [],
   }
 );
@@ -59,24 +59,6 @@ subscribe(cartStore, () => {
   localStorage.setItem("cart", JSON.stringify(cartStore));
 });
 
-function CloseIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      className="w-4 h-4"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6 18L18 6M6 6l12 12"
-      />
-    </svg>
-  );
-}
 function Cart() {
   const snap = useSnapshot(cartStore);
 
@@ -89,15 +71,15 @@ function Cart() {
           <div className="flex gap-2 justify-center items-center">
             <span>{p.name}</span>
             <button onClick={() => removeOne(p)}>
-              <MinusSignIcon />
+              <MinusIcon />
             </button>
             <span>{p.count}</span>
             <button onClick={() => addProductToCart(p)}>
-              <PlusSignIcon />
+              <PlusIcon />
             </button>
             <span>{p.price * p.count}</span>
             <button onClick={() => removeProductFromCart(p)}>
-              <TrashIcon />
+              <Trash2Icon />
             </button>
           </div>
         </div>
@@ -131,7 +113,13 @@ function AddressForm() {
       </label>
       <label>
         الهاتف
-        <Input {...register("name", { required: true })} className="mt-2" />
+        <Input
+          {...register("name", {
+            required: true,
+            pattern: /^09(1|2|4|5)[0-9]{7}$/,
+          })}
+          className="mt-2"
+        />
       </label>
       <label>
         العنوان
@@ -157,7 +145,7 @@ export default function CartSide() {
         className="fixed bottom-5 right-5 bg-brand-500 rounded-full p-4"
         onClick={toggleCart}
       >
-        <CartIcon />
+        <ShoppingCart />
       </button>
       {showCart ? (
         <aside
@@ -169,7 +157,7 @@ export default function CartSide() {
             onClick={(e) => e.stopPropagation()}
           >
             <button className="top-2 right-2 fixed" onClick={toggleCart}>
-              <CloseIcon />
+              <XIcon />
             </button>
             <Cart />
             <AddressForm />

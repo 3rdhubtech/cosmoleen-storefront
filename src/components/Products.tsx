@@ -1,25 +1,23 @@
+import { cn } from "@/lib/utils";
+import { useSignal } from "@preact/signals-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { cva, VariantProps } from "cva";
 import { motion } from "framer-motion";
+import parse from "html-react-parser";
+import { EyeIcon, ShoppingCart } from "lucide-react";
 import {
   forwardRef,
-  Fragment,
   HTMLAttributes,
-  ReactElement,
-  ReactNode,
   useCallback,
   useEffect,
   useState,
 } from "react";
-import parse from "html-react-parser";
-import * as Dialog from "@radix-ui/react-dialog";
-import EyeIcon from "./EyeIcon";
-import CartIcon from "./CartIcon";
-import { addProductToCart } from "./CartSide";
-import { proxy, useSnapshot } from "valtio";
-import { CircularProgress, Seek } from "react-loading-indicators";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import { VariantProps, cva } from "cva";
-import { cn } from "@/lib/utils";
+import { CircularProgress, Seek } from "react-loading-indicators";
+import { proxy, useSnapshot } from "valtio";
+import Carousel from "./Carousel";
+import { addProductToCart } from "./CartSide";
 import {
   Select,
   SelectContent,
@@ -27,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./Select";
+import Slider from "./Slider";
 const dialogStore = proxy<{ content: Product | null; isOpen: boolean }>({
   content: null,
   isOpen: false,
@@ -147,10 +146,10 @@ const Item = ({ view, product }: ItemProps) => {
             toggleDialog();
           }}
         >
-          <EyeIcon />
+          <EyeIcon fill="gray" />
         </button>
       ) : null}
-      <figure className="row-span-2 aspect-w-16 aspect-h-10 bg-white">
+      <figure className="row-span-2 aspect-video bg-white">
         <img
           src={`/is_cover_image/${product.cover}`}
           className="object-contain w-full h-full"
@@ -193,7 +192,7 @@ const Item = ({ view, product }: ItemProps) => {
               } else addProductToCart(product);
             }}
           >
-            <CartIcon />
+            <ShoppingCart />
           </button>
         </div>
       </div>
@@ -201,15 +200,20 @@ const Item = ({ view, product }: ItemProps) => {
   );
 };
 
+async function getVariant(id: number, name: string) {
+  return fetch(`/api/products/${id}/variant/${name}`).then((r) => r.json());
+}
+
 export function Products({ view = "grid" }: ProductsProps) {
   const { ref, inView } = useInView();
-  const snap = useSnapshot(dialogStore);
+
   const query = useInfiniteQuery(["products"], getProducts, {
     getNextPageParam: (lastPage) => {
       const { current_page, last_page } = lastPage.meta;
       return current_page < last_page ? current_page + 1 : undefined;
     },
   });
+
   useEffect(() => {
     if (inView) {
       query.fetchNextPage();
@@ -225,62 +229,7 @@ export function Products({ view = "grid" }: ProductsProps) {
 
   return (
     <>
-      {snap.content ? (
-        <Dialog.Root open={snap.isOpen} onOpenChange={setIsOpen}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm z-50">
-              <Dialog.Content className="flex flex-col gap-4 max-w-min min-w-lg bg-primary-700 p-8">
-                <h4 className="font-bold">{snap!.content!.name}</h4>
-
-                <Slider>
-                  {snap!.content!.images.map((s, idx) => (
-                    <Slider.Item key={idx}>
-                      <img
-                        className="w-full h-56"
-                        src={`/product_image/${s}`}
-                      />
-                    </Slider.Item>
-                  ))}
-                </Slider>
-                <div className="border-2 py-1 px-2 rounded-xl">
-                  {parse(snap!.content!.description)}
-                </div>
-
-                {Object.entries(snap.content.custom_fields).every(
-                  ([k, _v]) => k !== ""
-                ) ? (
-                  <div className="border-2 py-1 px-2 rounded-xl empty mt-3 flex flex-col gap-4 text-xs">
-                    {Object.entries(snap!.content.custom_fields).map(
-                      ([key, value], i) => {
-                        return (
-                          <span className="block">
-                            {key} : {value}
-                          </span>
-                        );
-                      }
-                    )}
-                  </div>
-                ) : null}
-                {snap.content.has_variant &&
-                  snap!.content!.variants.map((v) => {
-                    return (
-                      <Select dir="rtl">
-                        <SelectTrigger>
-                          <SelectValue placeholder={v.variant_name} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {v.variant_options.map((o) => {
-                            return <SelectItem value={o}>{o}</SelectItem>;
-                          })}
-                        </SelectContent>
-                      </Select>
-                    );
-                  })}
-              </Dialog.Content>
-            </Dialog.Overlay>
-          </Dialog.Portal>
-        </Dialog.Root>
-      ) : null}
+      <ProductDialog />
       <div className="container mx-auto">
         <ProductView view={view}>
           {query.data.pages.map((group) =>
@@ -301,74 +250,117 @@ export function Products({ view = "grid" }: ProductsProps) {
     </>
   );
 }
-function Slider({
-  children,
-}: {
-  children: ReactElement<typeof Slider.Item>[];
-}) {
-  const [counter, setCounter] = useState(0);
 
-  const len = children.length;
-  const nextSlide = useCallback(() => {
-    if (counter < len - 1) setCounter((counter) => (counter += 1));
-    else setCounter(0);
-  }, [counter]);
-  const prevSlide = useCallback(() => {
-    if (counter > 0) setCounter((counter) => (counter -= 1));
-    else setCounter(len - 1);
-  }, [counter]);
+function ProductDialog() {
+  const snap = useSnapshot(dialogStore);
 
-  return (
-    <div className="max-w-min relative">
-      <button
-        className=" py-2 absolute bottom-1/2 translate-y-1/2 bg-gray-400  hover:bg-gray-300 rounded-e-md"
-        onClick={nextSlide}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8.25 4.5l7.5 7.5-7.5 7.5"
-          />
-        </svg>
-      </button>
-      <div className="flex overflow-x-hidden rounded-2xl w-64">
-        {children[counter]}
-      </div>
-      <button
-        className=" py-2 absolute bottom-1/2 right-0 translate-y-1/2 bg-gray-400 hover:bg-gray-300 rounded-s-md"
-        onClick={prevSlide}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15.75 19.5L8.25 12l7.5-7.5"
-          />
-        </svg>
-      </button>
-    </div>
+  const [id, setID] = useState(0);
+  const [name, setName] = useState("");
+  const [fetchVariant, setFetchVariant] = useState(false);
+  const resetState = useCallback(() => {
+    setID(0);
+    setName("");
+  }, [id, name]);
+  const variant = useQuery(
+    ["variant", { id, name }],
+    () => getVariant(id, name),
+    {
+      enabled: fetchVariant && id !== 0,
+      onSettled: () => setFetchVariant(false),
+    }
   );
-}
-Slider.Item = SliderItem;
-function SliderItem({ children }: { children: ReactNode; key?: any }) {
+  if (snap.content === null || !snap.isOpen) return;
   return (
-    <div className="box-content flex flex-none snap-start w-full">
-      {children}
-    </div>
+    <Dialog.Root
+      open={snap.isOpen}
+      onOpenChange={(state) => {
+        setIsOpen(state);
+        resetState();
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm z-50">
+          <Dialog.Content className="flex flex-col gap-4 max-w-fit min-w-lg bg-primary-700 p-8 mx-4">
+            <h4 className="font-bold">{snap.content.name}</h4>
+            <div className="flex flex-col md:flex-row gap-4">
+              <Carousel className="w-64 self-center">
+                {snap.content.images.map((s, i) => (
+                  <img src={`/product_image/${s}`} key={i} />
+                ))}
+              </Carousel>
+              <div className="border-2 py-1 px-2 rounded-xl">
+                {parse(snap.content.description)}
+              </div>
+            </div>
+            {Object.entries(snap.content.custom_fields).every(
+              ([k, _v]) => k !== ""
+            ) ? (
+              <div className="border-2 py-1 px-2 rounded-xl empty mt-3 flex flex-col gap-4 text-xs">
+                {Object.entries(snap.content.custom_fields).map(
+                  ([key, value], i) => {
+                    return (
+                      <span className="block" key={i}>
+                        {key} : {value}
+                      </span>
+                    );
+                  }
+                )}
+              </div>
+            ) : null}
+            {snap.content.has_variant &&
+              snap.content.variants.map((v, i) => {
+                return (
+                  <Select
+                    dir="rtl"
+                    key={i}
+                    onValueChange={(selected) => {
+                      setID(snap.content!.id);
+                      setName(selected);
+                      setFetchVariant(true);
+                    }}
+                  >
+                    <SelectTrigger className="py-2 px-2 border border-2 rounded-lg">
+                      <SelectValue placeholder={v.variant_name} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {v.variant_options.map((o, j) => {
+                        return (
+                          <SelectItem value={o} key={`${i}-${j}`}>
+                            {o}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                );
+              })}
+            {snap.content.has_variant ? (
+              variant.isSuccess ? (
+                <div className="border-2 py-1 flex flex-col gap-2 px-2 rounded-xl empty mt-3  text-xs">
+                  <span>{variant.data.price}</span>
+                  <span
+                    className={cn(
+                      "rounded-lg bg-brand-500 text-white px-1 py-2 self-start",
+                      { "bg-red-700": !variant.data.quantity }
+                    )}
+                  >
+                    {variant.data.quantity ? "متاح بالمخزن" : " غير متوفر"}
+                  </span>
+                </div>
+              ) : !variant.isStale ? (
+                <Seek />
+              ) : null
+            ) : (
+              <div className="border-2 py-1 flex flex-col gap-2 px-2 rounded-xl empty mt-3  text-xs">
+                <span>{snap.content.price}</span>
+                <span className="rounded-xl bg-brand-500 text-white px-1 py-2 self-start">
+                  {snap.content.quantity ? "متاح بالمخزن" : " غير متوفر"}
+                </span>
+              </div>
+            )}
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
