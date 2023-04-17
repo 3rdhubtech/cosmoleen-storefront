@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { proxy, subscribe, useSnapshot } from "valtio";
 
 import { MinusIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
@@ -10,6 +10,9 @@ import { Input } from "./Input";
 import { derive } from "valtio/utils";
 import { toast } from "react-toastify";
 import { ShoppingCart } from "lucide-react";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "./Select";
+import { useQuery } from "@tanstack/react-query";
+import { SelectItem } from "@radix-ui/react-select";
 
 const cartStore = proxy<{ products: any[]; total: number }>(
   JSON.parse(localStorage?.getItem("cart") as string) || {
@@ -91,9 +94,25 @@ function Cart() {
     </div>
   );
 }
+function getLocations() {
+  return fetch("/api/locations").then((r) => r.json());
+}
+function getShipping(id: number) {
+  return fetch(`/api/locations/${id}/shipping`).then((r) => r.json());
+}
 function AddressForm() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, getValues } = useForm();
   const onSubmit = (data: any) => console.log(data);
+  const locations = useQuery(["locations"], getLocations);
+  const [selectedLocationID, setSelectedLocationID] = useState(0);
+
+  const shipping = useQuery(
+    ["shipping", { id: selectedLocationID }],
+    () => getShipping(selectedLocationID),
+    {
+      enabled: !!selectedLocationID,
+    }
+  );
   return (
     <div className="p-4 bg-primary-500 rounded flex flex-col gap-4 min-w-[20rem]">
       <h3 className="self-center">تفاصيل التسليم</h3>
@@ -128,6 +147,35 @@ function AddressForm() {
       <label>
         ملاحظات على الطلبية
         <Input {...register("name")} className="mt-2" />
+      </label>
+      <label>
+        اختر المدينة
+        <select
+          {...register("location", {
+            required: true,
+          })}
+          className="flex h-10 w-full rounded-md border border-slate-300 bg-primary-700 py-2 px-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-50 dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900"
+        >
+          {locations?.data?.map((location) => (
+            <option value={location.id} key={location.id}>
+              {location.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        اختر طريقة التوصيل
+        <select
+          {...register("location", { required: true })}
+          className="flex h-10 w-full rounded-md border border-slate-300 bg-primary-700 py-2 px-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-50 dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900"
+        >
+          <option disabled selected></option>
+          {shipping?.data?.map((shipping) => (
+            <option value={shipping.id} key={shipping.id}>
+              {shipping.name}
+            </option>
+          ))}
+        </select>
       </label>
     </div>
   );
