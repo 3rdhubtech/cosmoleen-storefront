@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { proxy, subscribe, useSnapshot } from "valtio";
 import { zodI18nMap } from "zod-i18n-map";
 import i18next from "i18next";
@@ -71,22 +71,24 @@ function Cart() {
   return (
     <div className="p-4 bg-primary-500 rounded flex flex-col items-center gap-4 min-w-[20rem]">
       <h4 className="font-semibold">عربة التسوق</h4>
-      <h5 className="text-sm">المجموع الفرعي</h5>
+      <h5 className="text-sm self-start">المجموع الفرعي</h5>
       {snap.products.map((p, idx) => (
-        <div className="text-xs">
-          <div className="flex gap-2 justify-center items-center">
-            <span>{p.name}</span>
-            <button onClick={() => removeOne(p)}>
-              <MinusIcon />
-            </button>
-            <span>{p.count}</span>
-            <button onClick={() => addProductToCart(p)}>
-              <PlusIcon />
-            </button>
-            <span>{p.price * p.count}</span>
-            <button onClick={() => removeProductFromCart(p)}>
-              <Trash2Icon />
-            </button>
+        <div className="text-xs w-full" key={idx}>
+          <div className="grid gap-2 grid-cols-2 justify-between items-center">
+            <span className="justify-self-start">{p.name}</span>
+            <div className="justify-self-end flex items-center gap-1">
+              <button onClick={() => removeOne(p)}>
+                <MinusIcon className="w-4 h-4" />
+              </button>
+              <span>{p.count}</span>
+              <button onClick={() => addProductToCart(p)}>
+                <PlusIcon className="w-4 h-4" />
+              </button>
+              <span>{p.price * p.count}</span>
+              <button onClick={() => removeProductFromCart(p)}>
+                <Trash2Icon />
+              </button>
+            </div>
           </div>
         </div>
       ))}
@@ -97,10 +99,12 @@ function Cart() {
     </div>
   );
 }
-function getLocations() {
+type Location = { id: number; name: string };
+async function getLocations(): Promise<Location[]> {
   return fetch("/api/locations").then((r) => r.json());
 }
-function getShipping(id: number) {
+type Shipping = Location;
+async function getShipping(id: number): Promise<Shipping[]> {
   return fetch(`/api/locations/${id}/shipping`).then((r) => r.json());
 }
 
@@ -142,15 +146,14 @@ function AddressForm() {
 
   const onSubmit = (data: any) => console.log(data);
   const locations = useQuery(["locations"], getLocations);
-  const [selectedLocationID, setSelectedLocationID] = useState(0);
 
-  const shipping = useQuery(
-    ["shipping", { id: selectedLocationID }],
-    () => getShipping(selectedLocationID),
-    {
-      enabled: !!selectedLocationID,
-    }
-  );
+  // const shipping = useQuery(
+  //   ["shipping", { id: selectedLocationID }],
+  //   () => getShipping(selectedLocationID),
+  //   {
+  //     enabled: !!selectedLocationID,
+  //   }
+  // );
   return (
     <div className="p-4 bg-primary-500 rounded flex flex-col gap-4 min-w-[20rem]">
       <h3 className="self-center">تفاصيل التسليم</h3>
@@ -193,6 +196,7 @@ function AddressForm() {
             ))}
           </select>
         </label>
+        {/*
         <label>
           اختر طريقة التوصيل
           <select
@@ -206,6 +210,7 @@ function AddressForm() {
             ))}
           </select>
         </label>
+          */}
       </form>
     </div>
   );
@@ -231,11 +236,14 @@ export default function CartSide() {
           onClick={toggleCart}
         >
           <div
-            className="grid grid-rows-3 grid-cols-1 px-8 max-w-md bg-primary-700 h-full place-items-center justify-self-end"
+            className="grid grid-cols-1 px-8 py-4 gap-4 max-w-md bg-primary-700 h-full place-items-center justify-self-end"
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="top-2 right-2 fixed" onClick={toggleCart}>
-              <XIcon />
+            <button
+              className="rounded-full top-2 right-2 fixed z-50"
+              onClick={toggleCart}
+            >
+              <XIcon className="w-4 h-4" />
             </button>
             <Cart />
             <AddressForm />

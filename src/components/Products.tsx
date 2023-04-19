@@ -139,7 +139,7 @@ const Item = ({ view, product }: ItemProps) => {
     >
       {isHovering ? (
         <button
-          className="absolute top-1 right-1 z-10"
+          className="absolute top-1 right-1 z-[1]"
           onClick={(e) => {
             e.stopPropagation();
             setDialogContent(product);
