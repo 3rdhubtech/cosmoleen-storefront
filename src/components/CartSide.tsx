@@ -240,7 +240,7 @@ export default function CartSide() {
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="rounded-full top-2 right-2 fixed z-50"
+              className="sticky rounded-full top-2 z-50 ml-auto bg-brand-900 p-1"
               onClick={toggleCart}
             >
               <XIcon className="w-4 h-4" />

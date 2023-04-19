@@ -23,6 +23,7 @@ specifiers:
   i18next: ^22.4.14
   lucide-react: ^0.160.0
   postcss: ^8.4.22
+  postcss-import: ^15.1.0
   postcss-rtlcss: ^4.0.4
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -30,6 +31,7 @@ specifiers:
   react-intersection-observer: ^9.4.3
   react-loading-indicators: ^0.1.1
   react-toastify: ^9.1.2
+  swiper: ^9.2.3
   tailwind-merge: ^1.12.0
   tailwindcss: ^3.3.1
   typescript: ^4.9.5
@@ -62,6 +64,7 @@ dependencies:
   react-intersection-observer: 9.4.3_react@18.2.0
   react-loading-indicators: 0.1.1_biqbaboplfbrettd7655fr4n2y
   react-toastify: 9.1.2_biqbaboplfbrettd7655fr4n2y
+  swiper: 9.2.3
   tailwind-merge: 1.12.0
   valtio: 1.10.4_react@18.2.0
   vite-tsconfig-paths: 4.2.0_27d6rnnqnnz33bvg4pqy2xno6y
@@ -76,6 +79,7 @@ devDependencies:
   '@vitejs/plugin-react-swc': 3.3.0_vite@4.2.1
   autoprefixer: 10.4.14_postcss@8.4.22
   postcss: 8.4.22
+  postcss-import: 15.1.0_postcss@8.4.22
   postcss-rtlcss: 4.0.4_postcss@8.4.22
   tailwindcss: 3.3.1_postcss@8.4.22
   typescript: 4.9.5
@@ -3465,6 +3469,18 @@ packages:
       resolve: 1.22.3
     dev: true
 
+  /postcss-import/15.1.0_postcss@8.4.22:
+    resolution: {integrity: sha512-hpr+J05B2FVYUAXHeK1YyI267J/dDDhMU6B6civm8hSY1jYJnBXxzKDKDswzJmtLHryrjhnDjqqp/49t8FALew==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      postcss: ^8.0.0
+    dependencies:
+      postcss: 8.4.22
+      postcss-value-parser: 4.2.0
+      read-cache: 1.0.0
+      resolve: 1.22.3
+    dev: true
+
   /postcss-js/4.0.1_postcss@8.4.22:
     resolution: {integrity: sha512-dDLF8pEO191hJMtlHFPRa8xsizHaM82MLfNkUHdUtVEV3tgTp5oj+8qbEqYM57SLfc74KSbw//4SeJma2LRVIw==}
     engines: {node: ^12 || ^14 || >= 16}
@@ -3867,6 +3883,10 @@ packages:
     deprecated: Please use @jridgewell/sourcemap-codec instead
     dev: true
 
+  /ssr-window/4.0.2:
+    resolution: {integrity: sha512-ISv/Ch+ig7SOtw7G2+qkwfVASzazUnvlDTwypdLoPoySv+6MqlOV10VwPSE6EWkGjhW50lUmghPmpYZXMu/+AQ==}
+    dev: false
+
   /string.prototype.matchall/4.0.8:
     resolution: {integrity: sha512-6zOCOcJ+RJAQshcTvXPHoxoQGONa3e/Lqx90wUA+wEzX78sg5Bo+1tQo4N0pohS0erG9qtCqJDjNCQBjeWVxyg==}
     dependencies:
@@ -3967,6 +3987,13 @@ packages:
   /supports-preserve-symlinks-flag/1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
+
+  /swiper/9.2.3:
+    resolution: {integrity: sha512-hxqcjIsYPP1fv+KIXPqGywl6ik8RBp0y0i9+TOIh55ca6SpZ5FrgNJ4QXPhsl6mlSBMEYPmh5zOKtZpI8zpWeQ==}
+    engines: {node: '>= 4.7.0'}
+    dependencies:
+      ssr-window: 4.0.2
+    dev: false
 
   /tailwind-merge/1.12.0:
     resolution: {integrity: sha512-Y17eDp7FtN1+JJ4OY0Bqv9OA41O+MS8c1Iyr3T6JFLnOgLg3EvcyMKZAnQ8AGyvB5Nxm3t9Xb5Mhe139m8QT/g==}

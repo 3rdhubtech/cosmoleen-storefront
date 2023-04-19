@@ -7,3 +7,17 @@ body {
   background: url("assets/background.jpg");
   background-size: 30%;
 }
+
+:root {
+  --swiper-pagination-color: white;
+  --swiper-theme-color: white;
+  --swiper-navigation-size: 24px;
+}
+
+.parallax-bg {
+  @apply absolute inset-0 h-full;
+  width: 130%;
+  -webkit-background-size: cover;
+  background-size: cover;
+  background-position: center;
+}
