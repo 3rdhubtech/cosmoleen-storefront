@@ -12,6 +12,8 @@ body {
   --swiper-pagination-color: white;
   --swiper-theme-color: white;
   --swiper-navigation-size: 24px;
+  --toastify-color-light: theme(colors.brand.500);
+  --toastify-color-dark: theme(colors.brand.500);
 }
 
 .parallax-bg {

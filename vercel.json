@@ -11,6 +11,14 @@
     {
       "source": "/product_image/:path(.*)",
       "destination": "https://cosmoleen.com/storage/uploads/product_image/:path"
+    },
+    {
+      "source": "/store_logo/:path(.*)",
+      "destination": "https://cosmoleen.com/storage/uploads/store_logo/:path"
+    },
+    {
+      "source": "/logo/:path(.*)",
+      "destination": "https://cosmoleen.com/storage/uploads/logo/:path"
     }
   ]
 }

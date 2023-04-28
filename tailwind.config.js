@@ -49,5 +49,8 @@ export default {
   corePlugins: {
     aspectRatio: false,
   },
-  plugins: [require("@tailwindcss/aspect-ratio")],
+  plugins: [
+    require("@tailwindcss/aspect-ratio"),
+    require("tailwind-scrollbar"),
+  ],
 };

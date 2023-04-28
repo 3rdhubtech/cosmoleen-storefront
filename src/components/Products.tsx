@@ -10,6 +10,7 @@ import { proxy, useSnapshot } from "valtio";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { addProductToCart } from "./CartSide";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import {
   Select,
   SelectContent,
@@ -17,7 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./Select";
+import queryString from "query-string";
 import "swiper/css/bundle";
+import { pageState } from "@/stores";
+import loadable from "@loadable/component";
 const dialogStore = proxy<{ content: Product | null; isOpen: boolean }>({
   content: null,
   isOpen: false,
@@ -71,11 +75,6 @@ export type Product = {
   images: string[];
 };
 
-async function getProducts({ pageParam = 1 }): Promise<Response> {
-  const res = await fetch("api/products?page=" + pageParam);
-  return await res.json();
-}
-
 type ItemProps = {
   product: Product;
   key: any;
@@ -92,17 +91,22 @@ const Item = ({ product }: ItemProps) => {
       onMouseOut={hoverOut}
       onTouchStart={hovered}
       onTouchEnd={hoverOut}
-      onClick={toggleDialog}
+      onClick={() => {
+        setDialogContent(product);
+        toggleDialog();
+      }}
     >
       {isHovering ? (
         <button className="absolute top-2 right-2 shadow-soft">
           <EyeIcon className="fill-gray-300" />
         </button>
       ) : null}
-      <img
+      <LazyLoadImage
         className="h-48 w-full shrink-0 rounded-t-lg bg-cover bg-center object-contain object-center bg-white lg:h-auto lg:w-48 lg:rounded-t-none lg:rounded-l-lg"
         src={`/is_cover_image/${product.cover}`}
         alt={product.name}
+        width="480px"
+        height="680px"
       />
 
       <div className="flex w-full grow flex-col px-4 py-3 sm:px-5">
@@ -113,12 +117,12 @@ const Item = ({ product }: ItemProps) => {
         </div>
         <div className="mt-1 line-clamp-3">{parse(product.description)}</div>
 
-        <div className="mt-1 flex justify-end items-center mt-auto">
+        <div className="flex justify-end items-center mt-auto">
           <span className={cn("mr-auto font-bold", { hidden: !product.price })}>
             {product.price} د.ل
           </span>
           <button
-            className="inline-flex cursor-pointer items-center justify-center rounded-lg px-5 py-2 text-center tracking-wide outline-none transition-all duration-200 focus:outline-none disabled:pointer-events-none px-2.5 py-1.5 font-medium text-white bg-brand-500 hover:bg-brand-500/70"
+            className="inline-flex cursor-pointer items-center justify-center rounded-lg px-5 py-2 text-center tracking-wide outline-none transition-all duration-200 focus:outline-none disabled:pointer-events-none  font-medium text-white bg-brand-500 hover:bg-brand-500/70"
             onClick={(e) => {
               e.stopPropagation();
               if (product.has_variant) {
@@ -138,11 +142,25 @@ const Item = ({ product }: ItemProps) => {
 async function getVariant(id: number, name: string) {
   return fetch(`/api/products/${id}/variant/${name}`).then((r) => r.json());
 }
+async function getProducts({
+  pageParam = 1,
+  queryKey: [_, data],
+}): Promise<Response> {
+  const params = {
+    page: pageParam,
+    category: data.categoryID ?? null,
+    price: data.priceOrder ?? null,
+    name: data.name,
+  };
 
-export function Products() {
+  return fetch(`/api/products?${queryString.stringify(params)}`).then((r) =>
+    r.json()
+  );
+}
+export default function Products() {
   const { ref, inView } = useInView();
-
-  const query = useInfiniteQuery(["products"], getProducts, {
+  const snap = useSnapshot(pageState);
+  const query = useInfiniteQuery(["products", { ...snap }], getProducts, {
     getNextPageParam: (lastPage) => {
       const { current_page, last_page } = lastPage.meta;
       return current_page < last_page ? current_page + 1 : undefined;
@@ -165,7 +183,7 @@ export function Products() {
   return (
     <>
       <ProductDialog />
-      <div className="container mx-auto">
+      <div className="container md:mx-auto">
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6">
           {query.data.pages.map((group) =>
             group.data.map((product, i) => (
@@ -215,7 +233,7 @@ function ProductDialog() {
     >
       <Dialog.Portal>
         <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm z-50">
-          <Dialog.Content className="flex flex-col gap-4 max-w-fit min-w-lg bg-primary-700 p-8 mx-4">
+          <Dialog.Content className="flex flex-col gap-4 max-w-fit min-w-lg bg-primary-700 md:p-8 md:mx-4">
             <h4 className="font-bold">{snap.content.name}</h4>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="w-96 self-center">
@@ -228,11 +246,13 @@ function ProductDialog() {
                 >
                   {snap.content.images.map((s, i) => (
                     <SwiperSlide key={i}>
-                      <img
+                      <LazyLoadImage
                         src={`/product_image/${s}`}
-                        className="h-full w-full rounded-lg object-cover"
+                        className="h-full w-full rounded-lg object-cover object-center"
                         alt={snap.content.name}
                         loading="lazy"
+                        width="480px"
+                        height="680px"
                       />
                     </SwiperSlide>
                   ))}
@@ -269,7 +289,7 @@ function ProductDialog() {
                       setFetchVariant(true);
                     }}
                   >
-                    <SelectTrigger className="py-2 px-2 border border-2 rounded-lg">
+                    <SelectTrigger className="py-2 px-2 border-2 rounded-lg">
                       <SelectValue placeholder={v.variant_name} />
                     </SelectTrigger>
                     <SelectContent>
