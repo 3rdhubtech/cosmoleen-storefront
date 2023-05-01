@@ -3,21 +3,14 @@ import "react-toastify/dist/ReactToastify.css";
 import { Arranges } from "./components/Arranges";
 import Navbar from "./components/Navbar";
 import loadable from "@loadable/component";
-import { Helmet } from "react-helmet";
-import { useQuery } from "@tanstack/react-query";
-import { useStore } from "./hooks";
 
 const Products = loadable(() => import("./components/Products"));
 const CartSide = loadable(() => import("./components/CartSide"));
-
+const Meta = loadable(() => import("./components/Meta"));
 function App() {
-  const store = useStore();
   return (
     <>
-      <Helmet>
-        <title>{store?.name}</title>
-        <meta name="description" content={store?.tagline} />
-      </Helmet>
+      <Meta />
       <ToastContainer
         position="top-right"
         autoClose={5000}

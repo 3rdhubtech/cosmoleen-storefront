@@ -19,19 +19,19 @@ export default function Slider({
   }, [counter]);
 
   return (
-    <div className="grid lg:grid-cols-3 grid-rows-1">
-      <div className="max-w-min relative">
+    <div className="grid grid-rows-1 lg:grid-cols-3">
+      <div className="relative max-w-min">
         <button
-          className=" py-2 absolute bottom-1/2 translate-y-1/2 bg-gray-400  hover:bg-gray-300 rounded-e-md"
+          className="absolute bottom-1/2 py-2 bg-gray-400 translate-y-1/2 hover:bg-gray-300 rounded-e-md"
           onClick={nextSlide}
         >
           <ChevronRight className="w-6 h-6" />
         </button>
-        <div className="flex overflow-x-hidden rounded-2xl w-64">
+        <div className="flex overflow-x-hidden w-64 rounded-2xl">
           {children[counter]}
         </div>
         <button
-          className=" py-2 absolute bottom-1/2 right-0 translate-y-1/2 bg-gray-400 hover:bg-gray-300 rounded-s-md"
+          className="absolute right-0 bottom-1/2 py-2 bg-gray-400 translate-y-1/2 hover:bg-gray-300 rounded-s-md"
           onClick={prevSlide}
         >
           <ChevronLeft className="w-6 h-6" />
@@ -42,7 +42,7 @@ export default function Slider({
 }
 function SliderItem({ children }: { children: ReactNode; key?: any }) {
   return (
-    <div className="box-content flex flex-none snap-start w-full">
+    <div className="box-content flex flex-none w-full snap-start">
       {children}
     </div>
   );

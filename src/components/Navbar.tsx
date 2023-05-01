@@ -4,14 +4,14 @@ import logo from "../assets/logo.png";
 export default function Navbar() {
   const store = useStore();
   return (
-    <header className="h-12 w-full bg-primary-500 flex items-center justify-between p-2 sticky top-0 z-10">
+    <header className="flex sticky top-0 z-10 justify-between items-center p-2 w-full h-12 bg-primary-500">
       <nav className="flex gap-2 items-center">
-        <div className="h-9 max-w-[9rem] flex items-center gap-2">
-          <img src={`/store_logo/${store?.logo}`} className="w-full p-1" />
+        <div className="flex gap-2 items-center h-9 max-w-[9rem]">
+          <img src={`/store_logo/${store?.logo}`} className="p-1 w-full" />
         </div>
-        <h1 className="font-bold text-xl flex flex-col">
+        <h1 className="flex flex-col text-xl font-bold">
           {store?.name}
-          <span className="text-xs hidden md:inline-block">
+          <span className="hidden text-xs md:inline-block">
             {store?.state} {store?.country}
           </span>
         </h1>

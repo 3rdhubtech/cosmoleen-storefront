@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
-import { EyeIcon, ShoppingCart } from "lucide-react";
+import { EyeIcon, ShoppingCart, XIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { CircularProgress, Seek } from "react-loading-indicators";
@@ -102,14 +102,14 @@ const Item = ({ product }: ItemProps) => {
         </button>
       ) : null}
       <LazyLoadImage
-        className="h-48 w-full shrink-0 rounded-t-lg bg-cover bg-center object-contain object-center bg-white lg:h-auto lg:w-48 lg:rounded-t-none lg:rounded-l-lg"
+        className="object-contain object-center w-full h-48 bg-white bg-center bg-cover rounded-t-lg shrink-0 lg:h-auto lg:w-48 lg:rounded-t-none lg:rounded-l-lg"
         src={`/is_cover_image/${product.cover}`}
         alt={product.name}
         width="480px"
         height="680px"
       />
 
-      <div className="flex w-full grow flex-col px-4 py-3 sm:px-5">
+      <div className="flex flex-col w-full px-4 py-3 grow sm:px-5">
         <div>
           <h3 className="text-lg font-medium text-white hover:text-brand-300 focus:text-brand-300">
             {product.name}
@@ -117,12 +117,12 @@ const Item = ({ product }: ItemProps) => {
         </div>
         <div className="mt-1 line-clamp-3">{parse(product.description)}</div>
 
-        <div className="flex justify-end items-center mt-auto">
+        <div className="flex items-center justify-end mt-auto">
           <span className={cn("mr-auto font-bold", { hidden: !product.price })}>
             {product.price} د.ل
           </span>
           <button
-            className="inline-flex cursor-pointer items-center justify-center rounded-lg px-5 py-2 text-center tracking-wide outline-none transition-all duration-200 focus:outline-none disabled:pointer-events-none  font-medium text-white bg-brand-500 hover:bg-brand-500/70"
+            className="inline-flex items-center justify-center px-5 py-2 font-medium tracking-wide text-center text-white transition-all duration-200 rounded-lg outline-none cursor-pointer focus:outline-none disabled:pointer-events-none bg-brand-500 hover:bg-brand-500/70"
             onClick={(e) => {
               e.stopPropagation();
               if (product.has_variant) {
@@ -145,6 +145,9 @@ async function getVariant(id: number, name: string) {
 async function getProducts({
   pageParam = 1,
   queryKey: [_, data],
+}: {
+  pageParam?: number;
+  queryKey: any[];
 }): Promise<Response> {
   const params = {
     page: pageParam,
@@ -175,7 +178,7 @@ export default function Products() {
 
   if (!query.data)
     return (
-      <div className="w-full h-full grid place-items-center">
+      <div className="grid w-full h-full place-items-center">
         <CircularProgress variant="bubble-dotted" size="medium" />
       </div>
     );
@@ -222,7 +225,8 @@ function ProductDialog() {
       onSettled: () => setFetchVariant(false),
     }
   );
-  if (snap.content === null || !snap.isOpen) return;
+  if (snap.content === null || !snap.isOpen) return <></>;
+
   return (
     <Dialog.Root
       open={snap.isOpen}
@@ -232,11 +236,17 @@ function ProductDialog() {
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="inset-0 fixed grid place-items-center backdrop-blur-sm z-50">
-          <Dialog.Content className="flex flex-col gap-4 max-w-fit min-w-lg bg-primary-700 md:p-8 md:mx-4">
+        <Dialog.Overlay className="fixed inset-0 z-50 grid overflow-y-scroll place-items-center backdrop-blur-sm">
+          <Dialog.Content className="relative flex flex-col gap-4 max-w-fit min-w-lg bg-primary-700 md:p-8 md:mx-4">
+            <button
+              className="absolute z-50 p-2 ml-auto rounded-full right-2 top-2 bg-brand-900"
+              onClick={toggleDialog}
+            >
+              <XIcon className="w-4 h-4" />
+            </button>
             <h4 className="font-bold">{snap.content.name}</h4>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="w-96 self-center">
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="self-center w-96">
                 <Swiper
                   grabCursor
                   navigation
@@ -248,24 +258,22 @@ function ProductDialog() {
                     <SwiperSlide key={i}>
                       <LazyLoadImage
                         src={`/product_image/${s}`}
-                        className="h-full w-full rounded-lg object-cover object-center"
-                        alt={snap.content.name}
+                        className="object-cover object-center rounded-lg"
+                        alt={snap.content!.name}
                         loading="lazy"
-                        width="480px"
-                        height="680px"
                       />
                     </SwiperSlide>
                   ))}
                 </Swiper>
               </div>
-              <div className="border-2 py-1 px-2 rounded-xl">
+              <div className="px-2 py-1 border-2 rounded-xl max-h-min">
                 {parse(snap.content.description)}
               </div>
             </div>
             {Object.entries(snap.content.custom_fields).every(
               ([k, _v]) => k !== ""
             ) ? (
-              <div className="border-2 py-1 px-2 rounded-xl empty mt-3 flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-4 px-2 py-1 mt-3 text-xs border-2 rounded-xl empty">
                 {Object.entries(snap.content.custom_fields).map(
                   ([key, value], i) => {
                     return (
@@ -289,7 +297,7 @@ function ProductDialog() {
                       setFetchVariant(true);
                     }}
                   >
-                    <SelectTrigger className="py-2 px-2 border-2 rounded-lg">
+                    <SelectTrigger className="px-2 py-2 border-2 rounded-lg">
                       <SelectValue placeholder={v.variant_name} />
                     </SelectTrigger>
                     <SelectContent>
@@ -306,26 +314,53 @@ function ProductDialog() {
               })}
             {snap.content.has_variant ? (
               variant.isSuccess ? (
-                <div className="border-2 py-1 flex flex-col gap-2 px-2 rounded-xl empty mt-3  text-xs">
-                  <span>{variant.data.price}</span>
+                <div className="flex items-center justify-between gap-2 px-2 py-1 mt-3 text-xs border-2 rounded-xl empty">
+                  <span className="px-1 py-2 rounded-lg">
+                    {variant.data.price}
+                  </span>
                   <span
                     className={cn(
-                      "rounded-lg bg-brand-500 text-white px-1 py-2 self-start",
+                      "rounded-lg bg-brand-500 text-white px-1 py-2",
                       { "bg-red-700": !variant.data.quantity }
                     )}
                   >
-                    {variant.data.quantity ? "متاح بالمخزن" : " غير متوفر"}
+                    {variant.data.quantity ? "متاح بالمخزن " : " غير متوفر"}
                   </span>
+                  <button
+                    disabled={!variant.data.quantity}
+                    className="inline-flex items-center justify-center px-5 py-2 font-medium tracking-wide text-center text-white transition-all duration-200 rounded-lg outline-none cursor-pointer focus:outline-none disabled:pointer-events-none bg-brand-500 hover:bg-brand-500/70"
+                    onClick={(e) => {
+                      addProductToCart(snap.content, variant.data);
+                    }}
+                  >
+                    <ShoppingCart />
+                  </button>
                 </div>
               ) : variant.isFetching ? (
                 <Seek />
               ) : null
             ) : (
-              <div className="border-2 py-1 flex flex-col gap-2 px-2 rounded-xl empty mt-3  text-xs">
-                <span>{snap.content.price}</span>
-                <span className="rounded-xl bg-brand-500 text-white px-1 py-2 self-start">
-                  {snap.content.quantity ? "متاح بالمخزن" : " غير متوفر"}
+              <div className="flex items-center justify-between gap-2 px-2 py-1 mt-3 text-xs border-2 rounded-xl empty">
+                <span className="px-1 py-2 rounded-lg">
+                  {snap.content.price}
                 </span>
+                <span
+                  className={cn(
+                    "rounded-lg bg-brand-500 text-white px-1 py-2",
+                    { "bg-red-700": !snap.content.quantity }
+                  )}
+                >
+                  {snap.content.quantity ? "متاح بالمخزن " : " غير متوفر"}
+                </span>
+                <button
+                  disabled={!snap.content.quantity}
+                  className="inline-flex items-center justify-center px-5 py-2 font-medium tracking-wide text-center text-white transition-all duration-200 rounded-lg outline-none cursor-pointer focus:outline-none disabled:pointer-events-none bg-brand-500 hover:bg-brand-500/70"
+                  onClick={(e) => {
+                    addProductToCart(snap.content);
+                  }}
+                >
+                  <ShoppingCart />
+                </button>
               </div>
             )}
           </Dialog.Content>

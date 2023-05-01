@@ -1,27 +1,34 @@
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { proxy, subscribe, useSnapshot } from "valtio";
 import { zodI18nMap } from "zod-i18n-map";
 import i18next from "i18next";
 import translation from "zod-i18n-map/locales/ar/zod.json";
 import { MinusIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Product } from "./Products";
-import Select from "react-select";
-import { Controller, useForm, useFormState } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Input } from "./Input";
 
 import { derive } from "valtio/utils";
 import { toast } from "react-toastify";
 import { ShoppingCart } from "lucide-react";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-
+import { TextArea } from "./TextArea";
+import axios from "axios";
+type Variant = {
+  id: number;
+  quantity: number;
+  price: number;
+  count: number;
+};
 type CartProduct = Product & {
   count: number;
-  selectedVariant?: { id: number; quantity: number; price: number };
+  selectedVariants?: Variant[];
 };
+
 const cartStore = proxy<{ products: CartProduct[]; total: number }>(
   JSON.parse(localStorage?.getItem("cart") as string) || {
     products: [],
@@ -30,34 +37,95 @@ const cartStore = proxy<{ products: CartProduct[]; total: number }>(
 
 const calculations = derive({
   total: (get) =>
-    get(cartStore).products.reduce(
-      (acc, cur) => (acc += cur.price * cur.count),
-      0
-    ),
+    get(cartStore).products.reduce((acc, cur) => {
+      acc += cur.has_variant
+        ? cur!.selectedVariants!.reduce((acc, cur) => {
+            acc += cur.price * cur.count;
+            return acc;
+          }, 0)
+        : cur.price * cur.count;
+      return acc;
+    }, 0),
 });
 
-export const removeProductFromCart = (p: any) => {
+export const removeProductFromCart = (p: any, v?: Variant) => {
   const idx = cartStore.products.findIndex((pc) => p.id === pc.id);
+
+  if (
+    cartStore.products[idx].has_variant &&
+    cartStore.products[idx].selectedVariants &&
+    v
+  ) {
+    const varIdx = cartStore.products[idx].selectedVariants!.findIndex(
+      (vari) => vari.id === v.id
+    );
+    cartStore.products[idx].selectedVariants!.splice(varIdx, 1);
+    return;
+  }
   cartStore.products.splice(idx, 1);
 };
-export const addProductToCart = (p: any, count = 1, selectedVariant = null) => {
+export const addProductToCart = (
+  p: any,
+  selectedVariant?: Variant,
+  count = 1
+) => {
   const idx = cartStore.products.findIndex((pc) => p.id === pc.id);
   if (idx === -1) {
-    cartStore.products.push({ selectedVariant, count, ...p });
+    const product = {
+      selectedVariants: selectedVariant ? [{ ...selectedVariant, count }] : [],
+      count,
+      ...p,
+    };
+    cartStore.products.push(product);
     toast("تمت الاضافة بنجاح.");
     return;
   }
   const product = cartStore.products[idx];
-  if (product.quantity > product.count) product.count++;
+  if (product.has_variant && product.selectedVariants && selectedVariant) {
+    const varIdx = product.selectedVariants.findIndex(
+      (v) => v.id === selectedVariant.id
+    );
+    if (varIdx === -1) {
+      product.selectedVariants.push({ ...selectedVariant, count });
+      toast("تمت الاضافة بنجاح.");
+      return;
+    }
+    const variant = product.selectedVariants[varIdx];
+    if (variant.quantity > variant.count) {
+      variant.count++;
+    } else {
+      toast("قد قمت باضافة كافة المخزون المتوفر", {
+        type: "info",
+      });
+    }
+    return;
+  }
+
+  if (product.quantity > product.count) {
+    product.count++;
+  } else {
+    toast("قد قمت باضافة كافة المخزون المتوفر", {
+      type: "info",
+    });
+  }
 };
-const removeOne = (p: any) => {
+const removeOne = (p: any, v: any = null) => {
   const idx = cartStore.products.findIndex((pc) => p.id === pc.id);
   if (idx === -1) {
     return;
   }
   const product = cartStore.products[idx];
-
-  if (product.count > 1) {
+  if (product.has_variant && product.selectedVariants) {
+    const varIdx = product.selectedVariants.findIndex(
+      (vari) => vari.id === v.id
+    );
+    const variant = product.selectedVariants[varIdx];
+    if (variant.count > 1) {
+      variant.count--;
+    } else {
+      product.variants.splice(varIdx, 1);
+    }
+  } else if (product.count > 1) {
     product.count--;
   } else {
     cartStore.products.splice(idx, 1);
@@ -74,30 +142,53 @@ function Cart() {
   const snap = useSnapshot(cartStore);
 
   return (
-    <div className="p-4 bg-primary-500 rounded flex flex-col items-center gap-4 min-w-[20rem]">
+    <div className="flex flex-col gap-4 items-center p-4 rounded bg-primary-500 min-w-[20rem]">
       <h4 className="font-semibold">عربة التسوق</h4>
-      <h5 className="text-sm self-start">المجموع الفرعي</h5>
-      {snap.products.map((p, idx) => (
-        <div className="text-xs w-full" key={idx}>
-          <div className="grid gap-2 grid-cols-2 justify-between items-center">
-            <span className="justify-self-start">{p.name}</span>
-            <div className="justify-self-end flex items-center gap-1">
-              <button onClick={() => removeOne(p)}>
-                <MinusIcon className="w-4 h-4" />
-              </button>
-              <span>{p.count}</span>
-              <button onClick={() => addProductToCart(p)}>
-                <PlusIcon className="w-4 h-4" />
-              </button>
-              <span>{p.price * p.count}</span>
-              <button onClick={() => removeProductFromCart(p)}>
-                <Trash2Icon />
-              </button>
+      <h5 className="self-start text-sm">المجموع الفرعي</h5>
+      {snap.products.map((p, idx) =>
+        !p.has_variant ? (
+          <div className="w-full text-xs" key={idx}>
+            <div className="grid items-center justify-between grid-cols-2 gap-2">
+              <span className="justify-self-start">{p.name}</span>
+              <div className="flex items-center gap-1 justify-self-end">
+                <button onClick={() => removeOne(p)}>
+                  <MinusIcon className="w-4 h-4" />
+                </button>
+                <span>{p.count}</span>
+                <button onClick={() => addProductToCart(p)}>
+                  <PlusIcon className="w-4 h-4" />
+                </button>
+                <span>{p.price * p.count}</span>
+                <button onClick={() => removeProductFromCart(p)}>
+                  <Trash2Icon />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-      <div className="self-start flex justify-between w-full">
+        ) : (
+          p.selectedVariants!.map((v, idx) => (
+            <div className="w-full text-xs" key={idx}>
+              <div className="grid items-center justify-between grid-cols-2 gap-2">
+                <span className="justify-self-start">{p.name}</span>
+                <div className="flex items-center gap-1 justify-self-end">
+                  <button onClick={() => removeOne(p, v)}>
+                    <MinusIcon className="w-4 h-4" />
+                  </button>
+                  <span>{v.count}</span>
+                  <button onClick={() => addProductToCart(p, v)}>
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                  <span>{v.price * v.count}</span>
+                  <button onClick={() => removeProductFromCart(p, v)}>
+                    <Trash2Icon />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )
+      )}
+      <div className="flex self-start justify-between w-full">
         <span>المجموع</span>
         <span className="font-bold">{calculations.total}</span>
       </div>
@@ -128,9 +219,26 @@ const schema = z.object({
     .regex(/^09(1|2|4|5)[0-9]{7}$/, { message: "رقم الهاتف غير صحيح" }),
   address: z.string().min(5),
   note: z.string().optional(),
-  location: z.string().nonempty(),
-  shipping: z.string().nonempty(),
+  location: z
+    .string()
+    .nonempty()
+    .regex(/[0-9]+/),
+  shipping: z
+    .string()
+    .nonempty()
+    .regex(/[0-9]+/),
 });
+function postBuy(data: any) {
+  return axios.post("/api/buy", data);
+  // return fetch("/api/buy", {
+  //   method: "POST",
+  //   headers: {
+  //     Accept: "application/json",
+  //     "Content-Type": "application/json",
+  //   },
+  //   body: data,
+  // });
+}
 function AddressForm() {
   const {
     register,
@@ -149,11 +257,31 @@ function AddressForm() {
     },
     resolver: zodResolver(schema),
   });
-  console.log(isValid);
+  const snap = useSnapshot(cartStore);
+  const id = useId();
   const [locID, setLocID] = useState("");
-  const onSubmit = (data: any) => console.log(data);
+  const mutation = useMutation({
+    mutationFn: (formData: any) => postBuy(formData),
+    onSuccess: () => resetCart(),
+    onError: () =>
+      toast("حدث خطأ غير متوقع", {
+        type: "error",
+      }),
+  });
+  const onSubmit = (data: any) => {
+    const products = snap.products
+      .map((product) => {
+        if (product.has_variant) {
+          return product.selectedVariants!.map((vari) => {
+            return { id: product.id, var_id: vari.id, count: vari.count };
+          });
+        }
+        return { id: product.id, count: product.count };
+      })
+      .flat();
+    mutation.mutate({ ...data, products });
+  };
   const locations = useQuery(["locations"], getLocations);
-
   const shipping = useQuery(
     ["shipping", { id: locID }],
     () => getShipping(locID),
@@ -167,51 +295,82 @@ function AddressForm() {
       noValidate
       className="grid items-center gap-2"
     >
-      <div className="p-4 bg-primary-500 rounded flex flex-col gap-4 min-w-[20rem]">
+      <div className="flex flex-col gap-4 p-4 rounded bg-primary-500 min-w-[20rem]">
         <h3 className="self-center">تفاصيل التسليم</h3>
-
-        <label>
-          الاسم
-          <Input {...register("name")} className="mt-2" />
-          <p className="empty text-red-500">{errors.name?.message}</p>
-        </label>
-        <label>
-          البريد الالكتروني
-          <Input type="email" {...register("email")} className="mt-2" />
-          <p className="empty text-red-500">{errors.email?.message}</p>
-        </label>
-        <label>
-          الهاتف
+        <div>
+          <label
+            htmlFor={`name-${id}`}
+            className="flex items-center justify-between"
+          >
+            الاسم
+            <span className="text-xs text-red-300">اجباري</span>
+          </label>
+          <Input {...register("name")} id={`name-${id}`} className="mt-2" />
+          <p className="text-red-500 empty">{errors.name?.message}</p>
+        </div>
+        <div>
+          <label
+            htmlFor={`phone-${id}`}
+            className="flex items-center justify-between"
+          >
+            الهاتف
+            <span className="text-xs text-red-300">اجباري</span>
+          </label>
           <Input
             {...register("phone")}
             placeholder="09xxxxxxxx"
+            id={`phone-${id}`}
             className="mt-2"
           />
-          <p className="empty text-red-500">{errors.phone?.message}</p>
-        </label>
-        <label>
-          العنوان
-          <Input {...register("address")} className="mt-2" />
-          <p className="empty text-red-500">{errors.address?.message}</p>
-        </label>
-        <label>
-          ملاحظات على الطلبية
-          <Input {...register("note")} className="mt-2" />
-          <p className="empty text-red-500">{errors.note?.message}</p>
-        </label>
+          <p className="text-red-500 empty">{errors.phone?.message}</p>
+        </div>
+        <div>
+          <label htmlFor={`email-${id}`}>البريد الالكتروني</label>
+          <Input
+            type="email"
+            {...register("email")}
+            id={`email-${id}`}
+            className="mt-2"
+          />
+          <p className="text-red-500 empty">{errors.email?.message}</p>
+        </div>
+        <div>
+          <label
+            htmlFor={`address-${id}`}
+            className="flex items-center justify-between"
+          >
+            العنوان
+            <span className="text-xs text-red-300">اجباري</span>
+          </label>
+          <Input
+            {...register("address")}
+            id={`address-${id}`}
+            className="mt-2"
+          />
+          <p className="text-red-500 empty">{errors.address?.message}</p>
+        </div>
+
         <Controller
           name="location"
           control={control}
           rules={{ required: true }}
           render={({ field: { onChange } }) => (
-            <label>
-              اختر المدينة
+            <div>
+              <label
+                htmlFor={`city-${id}`}
+                className="flex items-center justify-between"
+              >
+                اختر المدينة
+                <span className="text-xs text-red-300">اجباري</span>
+              </label>
               <select
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-primary-700 py-2 px-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-50 dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900"
+                className="flex w-full h-10 px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed border-slate-300 bg-primary-700 placeholder:text-slate-400 dark:border-slate-700 dark:text-slate-50 dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900 focus:ring-slate-400"
+                id={`city-${id}`}
                 onChange={(e) => {
                   onChange(e);
                   setLocID(e.target.value);
                 }}
+                defaultValue="0"
               >
                 <option disabled value="0"></option>
                 {locations?.data?.map((location) => (
@@ -220,8 +379,8 @@ function AddressForm() {
                   </option>
                 ))}
               </select>
-              <p className="empty text-red-500">{errors.location?.message}</p>
-            </label>
+              <p className="text-red-500 empty">{errors.location?.message}</p>
+            </div>
           )}
         />
         {shipping.data && shipping.data.length && (
@@ -230,14 +389,22 @@ function AddressForm() {
             control={control}
             rules={{ required: true }}
             render={({ field: { onChange } }) => (
-              <label>
-                اختر طريقة التوصيل
+              <div>
+                <label
+                  className="flex items-center justify-between"
+                  htmlFor={`shipment-${id}`}
+                >
+                  اختر طريقة التوصيل
+                  <span className="text-xs text-red-300">اجباري</span>
+                </label>
                 <select
-                  className="flex h-10 w-full rounded-md border border-slate-300 bg-primary-700 py-2 px-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-50 dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900"
+                  className="flex w-full h-10 px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed border-slate-300 bg-primary-700 placeholder:text-slate-400 dark:border-slate-700 dark:text-slate-50 dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900 focus:ring-slate-400"
                   onChange={(e) => {
                     onChange(e);
                     setLocID(e.target.value);
                   }}
+                  id={`shipment-${id}`}
+                  defaultValue="0"
                 >
                   <option disabled value="0"></option>
                   {shipping.data.map((shipping) => (
@@ -246,14 +413,19 @@ function AddressForm() {
                     </option>
                   ))}
                 </select>
-                <p className="empty text-red-500">{errors.shipping?.message}</p>
-              </label>
+                <p className="text-red-500 empty">{errors.shipping?.message}</p>
+              </div>
             )}
           />
         )}
+        <div>
+          <label htmlFor={`note-${id}`}>ملاحظات على الطلبية</label>
+          <TextArea {...register("note")} id={`note-${id}`} className="mt-2" />
+          <p className="text-red-500 empty">{errors.note?.message}</p>
+        </div>
       </div>
       {isValid && (
-        <button className="py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border-2 border-primary-500 font-semibold">
+        <button className="inline-flex items-center justify-center gap-2 px-4 py-3 font-semibold border-2 rounded-md border-primary-500">
           <span>طلبية عبر واتساب</span>
           <svg
             height="24px"
@@ -299,22 +471,22 @@ export default function CartSide() {
   return (
     <>
       <button
-        className="fixed bottom-5 right-5 bg-brand-500 rounded-full p-4"
+        className="fixed p-4 rounded-full right-5 bottom-5 bg-brand-500"
         onClick={toggleCart}
       >
         <ShoppingCart />
       </button>
       {showCart ? (
         <aside
-          className="fixed top-0 right-0 w-full h-full z-20 grid gap-2 place-items-center backdrop-blur shadow-sm overflow-auto"
+          className="fixed top-0 right-0 z-20 grid w-full h-full gap-2 overflow-auto shadow-sm place-items-center backdrop-blur"
           onClick={toggleCart}
         >
           <div
-            className="grid grid-cols-1 px-8 py-4 gap-4 max-w-md bg-primary-700 h-full place-items-center justify-self-end"
+            className="grid h-full max-w-md grid-cols-1 gap-4 px-8 py-4 justify-self-end place-items-center bg-primary-700"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="sticky rounded-full top-2 z-50 ml-auto bg-brand-900 p-1"
+              className="sticky z-50 p-1 ml-auto rounded-full top-2 bg-brand-900"
               onClick={toggleCart}
             >
               <XIcon className="w-4 h-4" />

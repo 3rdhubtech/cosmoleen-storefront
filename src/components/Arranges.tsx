@@ -34,8 +34,8 @@ export function Arranges() {
     <>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="inset-0 fixed backdrop-blur-sm">
-            <Dialog.Content className="min-w-md p-8 sticky top-8">
+          <Dialog.Overlay className="fixed inset-0 backdrop-blur-sm">
+            <Dialog.Content className="sticky top-8 p-8 min-w-md">
               <div className="bg-primary-500">
                 <Input
                   defaultValue={snap.name}
@@ -48,9 +48,9 @@ export function Arranges() {
           </Dialog.Overlay>
         </Dialog.Portal>
       </Dialog.Root>
-      <section className="text-sm flex my-4 items-center gap-4  bg-primary-500 max-w-sm md:max-w-xl mx-4 md:mx-auto rounded-lg justify-center sm:justify-between md:px-2">
+      <section className="flex gap-4 justify-center items-center my-4 mx-4 max-w-sm text-sm rounded-lg sm:justify-between md:px-2 md:mx-auto md:max-w-xl bg-primary-500">
         <div className="flex gap-1 items-center">
-          <div className="bg-primary-900 my-1 px-3 py-1 rounded-md">
+          <div className="py-1 px-3 my-1 rounded-md bg-primary-900">
             <Select dir="rtl" onValueChange={pageAction.setCategory}>
               <SelectTrigger aria-label="category">
                 <span>التصنيف: </span>
@@ -68,7 +68,7 @@ export function Arranges() {
               </SelectContent>
             </Select>
           </div>
-          <div className="bg-primary-900 my-1 px-3 py-1 rounded-md">
+          <div className="py-1 px-3 my-1 rounded-md bg-primary-900">
             <Select dir="rtl" onValueChange={pageAction.setPriceOrder}>
               <SelectTrigger aria-label="price">
                 <span>ترتيب:</span>
